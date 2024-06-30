@@ -141,7 +141,6 @@ var MQTTController = /** @class */ (function () {
                         shift = (_a = station.shifts) === null || _a === void 0 ? void 0 : _a.filter(function (shift) { return (0, house_keeping_utils_1.getDateStamp)(shift.date) == data.date && shift.name == data.current; })[0];
                         if (!!shift) return [3 /*break*/, 5];
                         date = new Date();
-                        date.setHours(0, 0, 0, 0);
                         return [4 /*yield*/, ShiftCountRepository.create({
                                 name: data.current,
                                 date: date,
@@ -212,7 +211,6 @@ var MQTTController = /** @class */ (function () {
                         _b.label = 4;
                     case 4:
                         date = new Date();
-                        date.setHours(0, 0, 0, 0);
                         return [4 /*yield*/, SPMEntryRepository.create({
                                 data: data,
                                 date: date,

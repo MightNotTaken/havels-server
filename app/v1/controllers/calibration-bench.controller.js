@@ -128,7 +128,6 @@ var CalibrationBenchController = /** @class */ (function () {
                         }
                         pod = bench.pods[+index];
                         date = new Date();
-                        date.setHours(0, 0, 0, 0);
                         return [4 /*yield*/, PodEntryRepository.create({
                                 verificationString: ver,
                                 calibrationString: cal,

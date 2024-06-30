@@ -1,0 +1,178 @@
+{
+	"info": {
+		"_postman_id": "18b7bf07-b2ac-45d6-a263-5b78bb3dcf8c",
+		"name": "Havels",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "7573968"
+	},
+	"item": [
+		{
+			"name": "hardware",
+			"item": [
+				{
+					"name": "add credentials",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://{{device-ip}}/api/wifi/add?apName=_Tahir_&apPass=bhaijaan",
+							"protocol": "http",
+							"host": [
+								"{{device-ip}}"
+							],
+							"path": [
+								"api",
+								"wifi",
+								"add"
+							],
+							"query": [
+								{
+									"key": "apName",
+									"value": "_Tahir_"
+								},
+								{
+									"key": "apPass",
+									"value": "bhaijaan"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "remove credential",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://{{device-ip}}/api/wifi/id?id=0",
+							"protocol": "http",
+							"host": [
+								"{{device-ip}}"
+							],
+							"path": [
+								"api",
+								"wifi",
+								"id"
+							],
+							"query": [
+								{
+									"key": "id",
+									"value": "0"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "get credentials",
+					"request": {
+						"method": "GET",
+						"header": []
+					},
+					"response": []
+				},
+				{
+					"name": "set-mqtt-credentials",
+					"request": {
+						"method": "GET",
+						"header": []
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "shift",
+			"item": [
+				{
+					"name": "add",
+					"request": {
+						"method": "GET",
+						"header": []
+					},
+					"response": []
+				},
+				{
+					"name": "remove",
+					"request": {
+						"method": "GET",
+						"header": []
+					},
+					"response": []
+				},
+				{
+					"name": "get-all",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://{{host}}:3000/api/v1/shift",
+							"protocol": "http",
+							"host": [
+								"{{host}}"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"v1",
+								"shift"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "publish",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "http://{{host}}:3000/api/v1/shift/publish",
+							"protocol": "http",
+							"host": [
+								"{{host}}"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"v1",
+								"shift",
+								"publish"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "station",
+			"item": [
+				{
+					"name": "reset-count",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "http://{{host}}:3000/api/v1/station/reset-count",
+							"protocol": "http",
+							"host": [
+								"{{host}}"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"v1",
+								"station",
+								"reset-count"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	]
+}

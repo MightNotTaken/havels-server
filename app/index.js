@@ -52,6 +52,11 @@ var app = (0, express_1.default)();
 app.use(express_1.default.json());
 app.use((0, cors_1.default)());
 app.use("/api", v1_1.default);
+app.get("/route", function (req, res) {
+    res.status(200).send({
+        message: 'its working'
+    });
+});
 app.listen(PORT, function () {
     mqtt_util_1.default.connect().then(function () {
         console.log('connected to Mqtt broker');

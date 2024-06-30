@@ -87,7 +87,6 @@ var StationController = /** @class */ (function () {
                             count = 0;
                         }
                         date_1 = new Date();
-                        date_1.setHours(0, 0, 0, 0);
                         return [4 /*yield*/, StationRepository.findOne({
                                 where: {
                                     name: station

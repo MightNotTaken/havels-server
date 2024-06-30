@@ -30,28 +30,24 @@ var CalibrationPodEntry = /** @class */ (function () {
     ], CalibrationPodEntry.prototype, "id", void 0);
     __decorate([
         (0, typeorm_1.Column)({
-            length: 150,
             nullable: false
         }),
         __metadata("design:type", String)
     ], CalibrationPodEntry.prototype, "calibrationString", void 0);
     __decorate([
         (0, typeorm_1.Column)({
-            length: 150,
             nullable: false
         }),
         __metadata("design:type", String)
     ], CalibrationPodEntry.prototype, "verificationString", void 0);
     __decorate([
         (0, typeorm_1.Column)({
-            length: 10,
             nullable: false
         }),
         __metadata("design:type", String)
     ], CalibrationPodEntry.prototype, "shift", void 0);
     __decorate([
         (0, typeorm_1.Column)({
-            length: 30,
             nullable: false
         }),
         __metadata("design:type", String)
