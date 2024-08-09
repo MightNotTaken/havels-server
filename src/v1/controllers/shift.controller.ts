@@ -109,6 +109,7 @@ class ShiftController {
         try {
             const shifts = await ShiftRepository.find({});
             mqttController.updateShifts('all', JSON.stringify(shifts));
+            console.log(JSON.stringify(shifts));
             res.status(200).send({
                 message: 'Shifts successfully published',
                 data: shifts
