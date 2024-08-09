@@ -11,8 +11,8 @@ namespace Shifts {
     if (Database::readFile("/shifts.json")) {
       list.resetContent(Database::payload());
     } else {
-      JSON defaultContent;
-      Shifts::updateShifts();
+      JSON defaultContent("[{\"id\":1,\"start\":\"10:00:01\",\"end\":\"12:00:00\",\"name\":\"A\"},{\"id\":2,\"start\":\"12:00:01\",\"end\":\"16:00:00\",\"name\":\"B\"},{\"id\":3,\"start\":\"16:00:01\",\"end\":\"20:00:00\",\"name\":\"C\"}]");
+      Shifts::updateShifts(defaultContent);
     }
     console.log("Shifts", list);//1310720
   }
