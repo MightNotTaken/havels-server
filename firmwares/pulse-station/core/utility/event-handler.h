@@ -34,7 +34,7 @@ public:
             auto& function = it->second;
             function(args...);
         } else {
-            console.log("not registered");
+            console.log(event.c_str(), "not registered");
         }
     }
 };

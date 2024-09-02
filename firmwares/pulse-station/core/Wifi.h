@@ -109,15 +109,15 @@ Wifi_T::Wifi_T() {
 }
 
 void Wifi_T::begin(const JSON& defaultContent) {
-  if (!Database::hasFile("/wifi.conf")) {
-    Database::writeFile("/wifi.conf", defaultContent.toString());
+  if (!Database::hasFile("/_wifi.conf")) {
+    Database::writeFile("/_wifi.conf", defaultContent.toString());
   }
-  if (Database::readFile("/wifi.conf")) {
+  if (Database::readFile("/_wifi.conf")) {
     console.log("Credentials loaded from database", Database::payload());
     if (JSON::isJSON(Database::payload())) {
       this->resetContent(Database::payload());
     } else {
-      Database::writeFile("/wifi.conf", defaultContent.toString());
+      Database::writeFile("/_wifi.conf", defaultContent.toString());
       this->resetContent(defaultContent.toString());
     }
   } else {
@@ -145,7 +145,7 @@ void Wifi_T::update(std::function<bool(JSON&)> predicate, const JSON& newValue) 
 }
 
 void Wifi_T::save() {
-  if (!Database::writeFile("/wifi.conf", this->toString())) {
+  if (!Database::writeFile("/_wifi.conf", this->toString())) {
     console.log("unable to save to database");
   }
 }

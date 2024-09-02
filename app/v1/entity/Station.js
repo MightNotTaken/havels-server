@@ -11,13 +11,13 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Station = void 0;
 var typeorm_1 = require("typeorm");
-var ShiftCount_1 = require("./ShiftCount");
+var HourlyStationCount_1 = require("./HourlyStationCount");
 var Station = /** @class */ (function () {
     function Station(body) {
         if (!body) {
             return;
         }
-        this.shifts = [];
+        this.hourlyCounts = [];
         this.name = body.name;
         this.mac = body.mac;
     }
@@ -26,11 +26,11 @@ var Station = /** @class */ (function () {
         __metadata("design:type", Number)
     ], Station.prototype, "id", void 0);
     __decorate([
-        (0, typeorm_1.OneToMany)(function () { return ShiftCount_1.ShiftCount; }, function (sc) { return sc.station; }, {
+        (0, typeorm_1.OneToMany)(function () { return HourlyStationCount_1.HourlyCount; }, function (hc) { return hc.station; }, {
             cascade: true,
         }),
         __metadata("design:type", Array)
-    ], Station.prototype, "shifts", void 0);
+    ], Station.prototype, "hourlyCounts", void 0);
     __decorate([
         (0, typeorm_1.Column)({
             length: 30,

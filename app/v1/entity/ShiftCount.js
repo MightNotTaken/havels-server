@@ -11,8 +11,13 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ShiftCount = void 0;
 var typeorm_1 = require("typeorm");
-var Station_1 = require("./Station");
 var ShiftCount = /** @class */ (function () {
+    // @ManyToOne(() => Station, (station) => station.shifts, {
+    //   orphanedRowAction: 'delete',
+    //   onDelete: 'CASCADE',
+    //   onUpdate: 'CASCADE',
+    // })
+    // station: Station;
     function ShiftCount(body) {
         if (!body) {
             return;
@@ -43,14 +48,6 @@ var ShiftCount = /** @class */ (function () {
         }),
         __metadata("design:type", Number)
     ], ShiftCount.prototype, "count", void 0);
-    __decorate([
-        (0, typeorm_1.ManyToOne)(function () { return Station_1.Station; }, function (station) { return station.shifts; }, {
-            orphanedRowAction: 'delete',
-            onDelete: 'CASCADE',
-            onUpdate: 'CASCADE',
-        }),
-        __metadata("design:type", Station_1.Station)
-    ], ShiftCount.prototype, "station", void 0);
     ShiftCount = __decorate([
         (0, typeorm_1.Entity)(),
         __metadata("design:paramtypes", [Object])

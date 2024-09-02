@@ -1,16 +1,16 @@
 import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from "typeorm";
-import { ShiftCount } from "./ShiftCount";
 import { StationInterface } from "../interfaces/station.interface";
+import { HourlyCount } from "./HourlyStationCount";
 
 @Entity()
 export class Station {
   @PrimaryGeneratedColumn()
   id: number;
   
-  @OneToMany(() => ShiftCount, (sc) => sc.station, {
+  @OneToMany(() => HourlyCount, (hc) => hc.station, {
     cascade: true,
   })
-  shifts: ShiftCount[];
+  hourlyCounts: HourlyCount[];
 
   @Column({
     length: 30,
@@ -26,7 +26,7 @@ export class Station {
     if (!body) {
         return;
     }
-    this.shifts = [];
+    this.hourlyCounts = [];
     this.name = body.name;
     this.mac = body.mac;
   }

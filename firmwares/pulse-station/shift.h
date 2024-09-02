@@ -7,6 +7,7 @@
 
 namespace Shifts {
   JSON list("[]");
+  void updateShifts(JSON);
   void begin() {
     if (Database::readFile("/shifts.json")) {
       list.resetContent(Database::payload());
@@ -90,14 +91,14 @@ namespace Shifts {
     count[station][name] = count[station][name].toInt() + increment;
     console.log(count);
     Database::writeFile("/shift/count.json", count.toString());
+    JSON response = "{}";
+    response["current"] = name;
+    response["station"] = station;
+    response["mac"] = MAC::getMac();
+    response[name] = count[station][name];
     console.log(response);
 
     if (wifiMQTT.connected()) {
-      JSON response = "{}";
-      response["current"] = name;
-      response["station"] = station;
-      response["mac"] = MAC::getMac();
-      response[name] = count[station][name].toInt();
       wifiMQTT.publish("station-count", response.toString().c_str());
     }
   }

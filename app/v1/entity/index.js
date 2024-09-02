@@ -1,6 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.entities = void 0;
+var HourlyStationCount_1 = require("./HourlyStationCount");
 var OTA_1 = require("./OTA");
 var Entry_1 = require("./SPM/Entry");
 var SPM_1 = require("./SPM/SPM");
@@ -18,6 +19,7 @@ exports.entities = [
     Bench_1.CalibrationBench,
     Pod_1.CalibrationPod,
     Entry_2.CalibrationPodEntry,
+    HourlyStationCount_1.HourlyCount,
     SPM_1.SPM,
     Entry_1.SPMEntry
 ];

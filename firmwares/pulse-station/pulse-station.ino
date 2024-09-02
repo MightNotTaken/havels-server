@@ -9,6 +9,7 @@
 #include "core/time.h"
 #include "core/OTA.h"
 #include "shift.h"
+
 using namespace Core;
 
 void setupWiFi();
@@ -18,7 +19,9 @@ void setupServerRoutes();
 
 void setup() {
   Serial.begin(9600);
+  
   Database::begin();
+  
   Configuration::begin();
   Shifts::begin();
   setupWiFi();
@@ -33,7 +36,7 @@ void setup() {
       rawData.trim();
       JSON data(rawData);
       if (data.size() == 1) {
-        Wifi.resetContent(data);
+        Wifi.resetContent(data.toString());
         Wifi.save();
         setTimeout([]() {
           ESP.restart();
@@ -53,6 +56,8 @@ void setupWiFi() {
   Wifi.on("connect", []() {
     console.log("Wifi connecting");
   });
+  Wifi.on("scanning", []() {});
+  Wifi.on("connecting", []() {});
   Wifi.on("connected", []() {
     console.log("Wifi connected");
     Serial.println(WiFi.localIP());
@@ -64,21 +69,35 @@ void setupWiFi() {
     Wifi.turnOnHotspot(PRODUCT_NAME + "_" + MAC::getMac(), "12345678", false);
     webServer.begin(DEVICE_TYPE);
   });
-  Wifi.begin("[{\"apName\":\"BuckByte\",\"apPass\":\"Airtel@123\"}]");
+  Wifi.begin("[{\"apName\":\"fitfab\",\"apPass\":\"12345678\"}]");
+  // Wifi.begin("[{\"apName\":\"QRG_VSMS\",\"apPass\":\"vsms@123\"}]");
 }
+
+IntervalReference connectionTracker;
 
 void setupMQTT() {
   static String status = "";
   wifiMQTT.on("connected", [](String message) {
     console.log("mqtt connected");
-    Time::listenToUTC();
+    Timer::listenToUTC();
     OTA::listenToUpdates(DEVICE_TYPE);
-    Time::onSync([](String stamp) {
+    Timer::onSync([](String difference) {
+      clearImmediate(connectionTracker);
+      console.log("time synchronized");
+      for (auto counter: Configuration::Device::pulseCounterList) {
+        counter->setHour(hour());
+        counter->sync();
+        counter->merge();
+      }
+      console.log(systemClock.getCurrentTime());
+    });
+    wifiMQTT.listen("/reset-all", [](String response) {
+      Counters::resetAll();
     });
     Shifts::listenToChanges();
-    setTimeout([]() {
+    connectionTracker = setImmediate([]() {
       wifiMQTT.emit("connect", Configuration::Device::toString());
-    }, 400);
+    }, 2000);
   });
   wifiMQTT.on("failure", [&status](String message) {
     console.log("MQTT disconnected");

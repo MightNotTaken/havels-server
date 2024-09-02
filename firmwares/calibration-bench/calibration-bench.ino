@@ -32,14 +32,14 @@ void setup() {
   setupServerRoutes();
   DataSource::begin();
   DataSource::onData([](PodData& podData) {
-    console.log(podData);
+    console.log(podData );
     if (barcodeReader.available(podData.getIndex())) {
       podData.setBarcodeData(barcodeReader.read(podData.getIndex()));
       JSON data = podData.toString();
       data["shift"] = Shifts::currentShift(getTimeStamp())["name"];
       JSON keys("[index,bar,ver,cal,shift]");
+      JSON response;
       for (int i=0; i<keys.size(); i++) {
-        JSON response;
         response["bench"] = DEVICE_STATION;
         String key = keys[i].toString();
         response[key] = data[key].toString();

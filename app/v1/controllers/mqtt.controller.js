@@ -43,13 +43,14 @@ var db_1 = require("../../db");
 var Shift_1 = require("../entity/Shift");
 var mqtt_util_1 = __importDefault(require("../utils/mqtt.util"));
 var Station_1 = require("../entity/Station");
-var house_keeping_utils_1 = require("../utils/house-keeping.utils");
 var ShiftCount_1 = require("../entity/ShiftCount");
 var calibration_bench_controller_1 = __importDefault(require("./calibration-bench.controller"));
 var SPM_1 = require("../entity/SPM/SPM");
 var Entry_1 = require("../entity/SPM/Entry");
+var HourlyStationCount_1 = require("../entity/HourlyStationCount");
 var ShiftRepository = db_1.AppDataSource.getTreeRepository(Shift_1.Shift);
 var StationRepository = db_1.AppDataSource.getTreeRepository(Station_1.Station);
+var HourlyCountRepository = db_1.AppDataSource.getTreeRepository(HourlyStationCount_1.HourlyCount);
 var ShiftCountRepository = db_1.AppDataSource.getTreeRepository(ShiftCount_1.ShiftCount);
 var SPMRepository = db_1.AppDataSource.getRepository(SPM_1.SPM);
 var SPMEntryRepository = db_1.AppDataSource.getRepository(Entry_1.SPMEntry);
@@ -74,6 +75,7 @@ var MQTTController = /** @class */ (function () {
                     case 0:
                         _c.trys.push([0, 6, , 7]);
                         _a = JSON.parse(data), mac_1 = _a.mac, station = _a.station;
+                        console.log('connection', { mac: mac_1, station: station });
                         return [4 /*yield*/, StationRepository.findOne({
                                 where: {
                                     name: station
@@ -109,73 +111,120 @@ var MQTTController = /** @class */ (function () {
                 }
             });
         }); });
-        mqtt_util_1.default.listen("station-count", function (data) { return __awaiter(_this, void 0, void 0, function () {
-            var name, station, shift, date, response, error_2;
-            var _a;
+        mqtt_util_1.default.listen("hourly-station-count", function (data) { return __awaiter(_this, void 0, void 0, function () {
+            var _a, hour, stationName, count, mac, station, date, hourlyCount, error_2;
             return __generator(this, function (_b) {
                 switch (_b.label) {
                     case 0:
-                        _b.trys.push([0, 9, , 10]);
-                        data = JSON.parse(data);
-                        name = data.station;
+                        _b.trys.push([0, 10, , 11]);
+                        console.log(data);
+                        _a = JSON.parse(data), hour = _a[0], stationName = _a[1], count = _a[2], mac = _a[3];
                         return [4 /*yield*/, StationRepository.findOne({
                                 where: {
-                                    name: name
-                                },
-                                relations: ['shifts']
+                                    name: stationName
+                                }
                             })];
                     case 1:
                         station = _b.sent();
-                        if (!!station) return [3 /*break*/, 3];
+                        if (!!station) return [3 /*break*/, 4];
                         return [4 /*yield*/, StationRepository.create({
-                                name: name,
+                                name: stationName,
                                 mac: data.mac
                             })];
                     case 2:
                         station = _b.sent();
-                        _b.label = 3;
+                        return [4 /*yield*/, StationRepository.save(station)];
                     case 3:
-                        if (!station.shifts) {
-                            station.shifts = [];
-                        }
-                        shift = (_a = station.shifts) === null || _a === void 0 ? void 0 : _a.filter(function (shift) { return (0, house_keeping_utils_1.getDateStamp)(shift.date) == data.date && shift.name == data.current; })[0];
-                        if (!!shift) return [3 /*break*/, 5];
-                        date = new Date();
-                        return [4 /*yield*/, ShiftCountRepository.create({
-                                name: data.current,
-                                date: date,
-                                count: +data[data.current]
-                            })];
+                        _b.sent();
+                        _b.label = 4;
                     case 4:
-                        shift = _b.sent();
-                        station.shifts.push(shift);
-                        return [3 /*break*/, 6];
+                        ;
+                        date = new Date();
+                        date.setHours(0);
+                        date.setMinutes(0);
+                        date.setSeconds(0);
+                        date.setMilliseconds(0);
+                        return [4 /*yield*/, HourlyCountRepository.findOne({
+                                where: {
+                                    station: station,
+                                    hour: +hour,
+                                    date: date
+                                }
+                            })];
                     case 5:
-                        shift.count = +data[data.current];
-                        _b.label = 6;
-                    case 6: return [4 /*yield*/, StationRepository.save(station)];
+                        hourlyCount = _b.sent();
+                        if (!!hourlyCount) return [3 /*break*/, 7];
+                        return [4 /*yield*/, HourlyCountRepository.create({
+                                hour: +hour,
+                                date: date,
+                                station: station,
+                                count: +count
+                            })];
+                    case 6:
+                        hourlyCount = _b.sent();
+                        return [3 /*break*/, 8];
                     case 7:
-                        _b.sent();
-                        return [4 /*yield*/, ShiftCountRepository.save(shift)];
-                    case 8:
-                        _b.sent();
-                        response = {};
-                        response.current = data.current;
-                        response[data.current] = +data[data.current];
-                        response["station"] = data.station;
-                        this.client.publish("".concat(data.mac, "/reset-count"), JSON.stringify(response));
-                        return [3 /*break*/, 10];
+                        hourlyCount.count = count;
+                        _b.label = 8;
+                    case 8: return [4 /*yield*/, HourlyCountRepository.save(hourlyCount)];
                     case 9:
+                        _b.sent();
+                        return [3 /*break*/, 11];
+                    case 10:
                         error_2 = _b.sent();
                         console.error(error_2);
-                        return [3 /*break*/, 10];
-                    case 10: return [2 /*return*/];
+                        return [3 /*break*/, 11];
+                    case 11: return [2 /*return*/];
                 }
             });
         }); });
+        // MQTTService.listen("station-count", async (data) => {
+        //     try {
+        //         data = JSON.parse(data);
+        //         console.log(data);
+        //         const name = data.station;
+        //         let station = await StationRepository.findOne({
+        //             where: {
+        //                 name
+        //             },
+        //             relations: ['shifts']
+        //         });
+        //         if (!station) {
+        //             station = await StationRepository.create({
+        //                 name,
+        //                 mac: data.mac
+        //             });
+        //         }
+        //         if (!station.shifts) {
+        //             station.shifts = [];
+        //         }
+        //         let shift: ShiftCount = station.shifts?.filter(shift => getDateStamp(shift.date) == data.date && shift.name == data.current)[0];
+        //         if (!shift) {
+        //             let date = new Date();
+        //             shift = await ShiftCountRepository.create({
+        //                 name: data.current,
+        //                 date,
+        //                 count: +data[data.current]
+        //             });
+        //             station.shifts.push(shift);
+        //         } else {
+        //             shift.count = +data[data.current];
+        //         }
+        //         await StationRepository.save(station);
+        //         await ShiftCountRepository.save(shift);
+        //         const response: any = {};
+        //         response.current = data.current;
+        //         response[data.current] = +data[data.current];
+        //         response["station"] = data.station;
+        //         this.client.publish(`${data.mac}/reset-count`, JSON.stringify(response));
+        //     } catch (error) {
+        //         console.error(error);
+        //     }
+        // });
         mqtt_util_1.default.listen("calibration-bench", function (data) { return __awaiter(_this, void 0, void 0, function () {
             return __generator(this, function (_a) {
                 try {
+                    console.log("calibration-bench", data);
                     calibration_bench_controller_1.default.parseBuffer(data);
                 }
                 catch (error) {
@@ -191,6 +240,11 @@ var MQTTController = /** @class */ (function () {
                     case 0:
                         _b.trys.push([0, 7, , 8]);
                         _a = JSON.parse(_data), name = _a.name, data = _a.data, shift = _a.shift;
+                        console.log('spm', {
+                            name: name,
+                            data: data,
+                            shift: shift
+                        });
                         return [4 /*yield*/, SPMRepository.findOne({
                                 where: {
                                     name: name

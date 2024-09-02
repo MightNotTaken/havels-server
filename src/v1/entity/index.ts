@@ -1,3 +1,4 @@
+import { HourlyCount } from "./HourlyStationCount";
 import { OTA } from "./OTA";
 import { SPMEntry } from "./SPM/Entry";
 import { SPM } from "./SPM/SPM";
@@ -16,6 +17,7 @@ export const entities = [
     CalibrationBench,
     CalibrationPod,
     CalibrationPodEntry,
+    HourlyCount,
     SPM,
     SPMEntry
 ];

@@ -10,10 +10,12 @@ import { ShiftCount } from "../entity/ShiftCount";
 import calibrationBenchController from "./calibration-bench.controller";
 import { SPM } from "../entity/SPM/SPM";
 import { SPMEntry } from "../entity/SPM/Entry";
+import { HourlyCount } from "../entity/HourlyStationCount";
 
 
 const ShiftRepository = AppDataSource.getTreeRepository(Shift);
 const StationRepository = AppDataSource.getTreeRepository(Station);
+const HourlyCountRepository = AppDataSource.getTreeRepository(HourlyCount);
 const ShiftCountRepository = AppDataSource.getTreeRepository(ShiftCount);
 const SPMRepository = AppDataSource.getRepository(SPM);
 const SPMEntryRepository = AppDataSource.getRepository(SPMEntry);
@@ -32,6 +34,7 @@ class MQTTController {
         MQTTService.listen('connect', async (data) => {
             try {
                 const {mac, station} = JSON.parse(data);
+                console.log('connection', {mac, station})
                 let stationData = await StationRepository.findOne({
                     where: {
                         name: station
@@ -55,51 +58,98 @@ class MQTTController {
                 console.error(error);
             }
         });
-        MQTTService.listen("station-count", async (data) => {
+        MQTTService.listen("hourly-station-count", async (data) => {
             try {
-                data = JSON.parse(data);
-                const name = data.station;
+                console.log(data);
+                const [hour, stationName, count, mac] = JSON.parse(data);
+                
                 let station = await StationRepository.findOne({
                     where: {
-                        name
-                    },
-                    relations: ['shifts']
+                        name: stationName
+                    }
                 });
                 if (!station) {
                     station = await StationRepository.create({
-                        name,
+                        name: stationName,
                         mac: data.mac
                     });
-                }
-                if (!station.shifts) {
-                    station.shifts = [];
-                }
-                let shift: ShiftCount = station.shifts?.filter(shift => getDateStamp(shift.date) == data.date && shift.name == data.current)[0];
-                if (!shift) {
-                    let date = new Date();
-                    shift = await ShiftCountRepository.create({
-                        name: data.current,
-                        date,
-                        count: +data[data.current]
-                    });
-                    station.shifts.push(shift);
-                } else {
-                    shift.count = +data[data.current];
-                }
-                await StationRepository.save(station);
+                    await StationRepository.save(station);
+                };
+                let date = new Date();
+                date.setHours(0);
+                date.setMinutes(0);
+                date.setSeconds(0);
+                date.setMilliseconds(0);
                 
-                await ShiftCountRepository.save(shift);
-                const response: any = {};
-                response.current = data.current;
-                response[data.current] = +data[data.current];
-                response["station"] = data.station;
-                this.client.publish(`${data.mac}/reset-count`, JSON.stringify(response));
+                let hourlyCount = await HourlyCountRepository.findOne({
+                    where: {
+                        station,
+                        hour: +hour,
+                        date: date
+                    }
+                });
+                if (!hourlyCount) {
+                    hourlyCount = await HourlyCountRepository.create({
+                        hour: +hour,
+                        date: date,
+                        station: station,
+                        count: +count
+                    });
+                } else {
+                    hourlyCount.count = count;
+                }
+                await HourlyCountRepository.save(hourlyCount);
             } catch (error) {
                 console.error(error);
             }
         });
+        // MQTTService.listen("station-count", async (data) => {
+        //     try {
+        //         data = JSON.parse(data);
+        //         console.log(data);
+        //         const name = data.station;
+        //         let station = await StationRepository.findOne({
+        //             where: {
+        //                 name
+        //             },
+        //             relations: ['shifts']
+        //         });
+        //         if (!station) {
+        //             station = await StationRepository.create({
+        //                 name,
+        //                 mac: data.mac
+        //             });
+        //         }
+        //         if (!station.shifts) {
+        //             station.shifts = [];
+        //         }
+        //         let shift: ShiftCount = station.shifts?.filter(shift => getDateStamp(shift.date) == data.date && shift.name == data.current)[0];
+        //         if (!shift) {
+        //             let date = new Date();
+        //             shift = await ShiftCountRepository.create({
+        //                 name: data.current,
+        //                 date,
+        //                 count: +data[data.current]
+        //             });
+        //             station.shifts.push(shift);
+        //         } else {
+        //             shift.count = +data[data.current];
+        //         }
+        //         await StationRepository.save(station);
+                
+        //         await ShiftCountRepository.save(shift);
+        //         const response: any = {};
+        //         response.current = data.current;
+        //         response[data.current] = +data[data.current];
+        //         response["station"] = data.station;
+        //         this.client.publish(`${data.mac}/reset-count`, JSON.stringify(response));
+        //     } catch (error) {
+        //         console.error(error);
+        //     }
+        // });
         MQTTService.listen("calibration-bench", async (data) => {
             try {
+                console.log("calibration-bench", data);
                 calibrationBenchController.parseBuffer(data);
             } catch (error) {
                 console.error(error)
@@ -110,6 +160,9 @@ class MQTTController {
                 const {
                     name, data, shift
                 } = JSON.parse(_data);
+                console.log('spm', {
+                    name, data, shift
+                })
                 let spm = await SPMRepository.findOne({
                     where: {
                         name

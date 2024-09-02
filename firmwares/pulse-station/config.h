@@ -9,6 +9,10 @@
 #include "core/web-server.h"
 #include "board.h"
 #include "shift.h"
+#include "core/counter.h"
+#include "core/utility/console.h"
+#include "core/clock.h"
+#include "pulse-counter.h"
 
 #define PRODUCT_NAME               String("LINE_STATION")
 #define FIRMWARE_VERSION                  String("1.0.0")
@@ -40,33 +44,38 @@ namespace Configuration {
       });
     }
     void begin() {
-      creds["server"] = "192.168.79.60";
+      creds["server"] = "192.168.227.137";
       creds["port"] = 1883;
-      creds["username"] = "tahir";
-      creds["password"] = "AlMustafa@786";
+      creds["username"] = "";
+      creds["password"] = "";
+      // creds["username"] = "vsms";
+      // creds["password"] = "VSMS@123";
       
       if (Database::hasFile("/mqtt/creds.conf")) {
         Database::writeFile("/mqtt/creds.conf", creds.toString());
       }
-      if (Database::readFile("/mqtt/creds.conf")) {
-        creds.resetContent(Database::payload());
-      }
+      // if (Database::readFile("/mqtt/creds.conf")) {
+      //   creds.resetContent(Database::payload());
+      // }
       creds["id"] = MAC::getMac();
       Configuration::MQTT::registerRoute();
     }
 
     bool isValid() {
+      console.log("validating mqtt", creds);
       return creds.contains("server");
     }
    
   };
+
   namespace Device {
+    std::vector<PulseCounter*> pulseCounterList;
     std::vector<std::pair<String, int>> pulseReaders = {
-      // {"station-1", PULSE_SOURCE_0},
-      // {"station-2", PULSE_SOURCE_0},
-      // {"station-3", PULSE_SOURCE_0},
+      {"station-12", PULSE_SOURCE_0},
+      {"station-13", PULSE_SOURCE_1},
+      {"station-14", PULSE_SOURCE_2},
       // {"station-4", PULSE_SOURCE_0},
-      {"station-5", PULSE_SOURCE_0}
+      // {"station-5", PULSE_SOURCE_0}
     };
     String toString() {
       JSON json;
@@ -78,25 +87,15 @@ namespace Configuration {
 
     void begin() {
       Configuration::MQTT::begin();
+      Counters::initialize();
       for (auto [station, gpio]: pulseReaders) {
-        InputGPIO* input = new InputGPIO(gpio);
-        input->onStateLow([station]() {          
-          JSON shift = Shifts::currentShift(getTimeStamp());
-          if (shift) {
-            String name = shift["name"].toString();
-            if (station == "station-5") {
-              static TimeoutReference timeout;
-              clearTimeout(timeout);
-              timeout = setTimeout([station, name, shift]() {
-                console.log("updating count");
-                Shifts::increaseCount(station, name, 1);
-              }, 3000);
-            } else {
-              Shifts::increaseCount(station, name, 1);
-            }
+        PulseCounter* counter = new PulseCounter(station, gpio);
+        pulseCounterList.push_back(counter);
+        counter->on("data", [](String response) {
+          if (WiFi.status() == WL_CONNECTED) {
+            wifiMQTT.publish("hourly-station-count", response.c_str());
           }
         });
-        GPIOs::registerInput(input);
       }
       GPIOs::begin();
     }
