@@ -10,6 +10,10 @@ export class SPM {
   @Column({
     length: 10
   }) name: string;
+  
+  @Column({
+    nullable: true
+  }) mac: string;
 
   @OneToMany(() => SPMEntry, (entry) => entry.spm, {
     cascade: true,
@@ -21,5 +25,6 @@ export class SPM {
         return;
     }
     this.name = body.name;
+    this.mac = body.mac;
   }
 }

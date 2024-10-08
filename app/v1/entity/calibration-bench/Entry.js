@@ -12,17 +12,17 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.CalibrationPodEntry = void 0;
 var typeorm_1 = require("typeorm");
 var Pod_1 = require("./Pod");
+var Batch_1 = require("./Batch");
 var CalibrationPodEntry = /** @class */ (function () {
     function CalibrationPodEntry(body) {
         if (!body) {
             return;
         }
-        this.calibrationString = body.calibrationString;
-        this.verificationString = body.verificationString;
-        this.shift = body.shift;
         this.barcode = body.barcode;
         this.pod = body.pod;
-        this.date = body.date;
+        this.result = body.result;
+        this.tripTime = body.tripTime;
+        this.batch = body.batch;
     }
     __decorate([
         (0, typeorm_1.PrimaryGeneratedColumn)(),
@@ -33,29 +33,19 @@ var CalibrationPodEntry = /** @class */ (function () {
             nullable: false
         }),
         __metadata("design:type", String)
-    ], CalibrationPodEntry.prototype, "calibrationString", void 0);
-    __decorate([
-        (0, typeorm_1.Column)({
-            nullable: false
-        }),
-        __metadata("design:type", String)
-    ], CalibrationPodEntry.prototype, "verificationString", void 0);
-    __decorate([
-        (0, typeorm_1.Column)({
-            nullable: false
-        }),
-        __metadata("design:type", String)
-    ], CalibrationPodEntry.prototype, "shift", void 0);
-    __decorate([
-        (0, typeorm_1.Column)({
-            nullable: false
-        }),
-        __metadata("design:type", String)
     ], CalibrationPodEntry.prototype, "barcode", void 0);
     __decorate([
-        (0, typeorm_1.Column)(),
-        __metadata("design:type", Date)
-    ], CalibrationPodEntry.prototype, "date", void 0);
+        (0, typeorm_1.Column)({
+            nullable: false
+        }),
+        __metadata("design:type", Number)
+    ], CalibrationPodEntry.prototype, "tripTime", void 0);
+    __decorate([
+        (0, typeorm_1.Column)({
+            nullable: false
+        }),
+        __metadata("design:type", Boolean)
+    ], CalibrationPodEntry.prototype, "result", void 0);
     __decorate([
         (0, typeorm_1.ManyToOne)(function () { return Pod_1.CalibrationPod; }, function (pod) { return pod.entries; }, {
             orphanedRowAction: 'delete',
@@ -64,6 +54,15 @@ var CalibrationPodEntry = /** @class */ (function () {
         }),
         __metadata("design:type", Pod_1.CalibrationPod)
     ], CalibrationPodEntry.prototype, "pod", void 0);
+    __decorate([
+        (0, typeorm_1.ManyToOne)(function () { return Batch_1.Batch; }, {
+            nullable: false,
+            onDelete: 'CASCADE',
+            onUpdate: 'CASCADE',
+        }),
+        (0, typeorm_1.JoinColumn)({ name: 'batch_id' }),
+        __metadata("design:type", Batch_1.Batch)
+    ], CalibrationPodEntry.prototype, "batch", void 0);
     CalibrationPodEntry = __decorate([
         (0, typeorm_1.Entity)(),
         __metadata("design:paramtypes", [Object])

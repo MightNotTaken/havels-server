@@ -1,1 +1,0 @@
-{"version":3,"file":"medicine.route.js","sourceRoot":"","sources":["../../../src/v1/routes/medicine.route.ts"],"names":[],"mappings":";;;;;AAAA,oDAA8B;AAC9B,2FAAoE;AACpE,IAAM,MAAM,GAAG,iBAAO,CAAC,MAAM,EAAE,CAAC;AAEhC,MAAM,CAAC,IAAI,CAAC,EAAE,EAAE,6BAAkB,CAAC,GAAG,CAAC,CAAC;AACxC,MAAM,CAAC,MAAM,CAAC,EAAE,EAAE,6BAAkB,CAAC,MAAM,CAAC,CAAC;AAE7C,kBAAe,MAAM,CAAC"}

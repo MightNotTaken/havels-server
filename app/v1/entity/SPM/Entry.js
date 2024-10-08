@@ -17,33 +17,73 @@ var SPMEntry = /** @class */ (function () {
         if (!body) {
             return;
         }
-        this.shift = body.shift;
-        this.data = body.data;
-        this.date = body.date;
+        this.qr = body.qr;
+        this.rating = body.rating;
+        this.resistance = body.resistance;
+        this.resistanceStauts = body.resistanceStauts;
+        this.hold = body.hold;
+        this.holdStauts = body.holdStauts;
+        this.trip = body.trip;
+        this.tripStauts = body.tripStauts;
+        this.hvStatus = body.hvStatus;
+        this.overallStatus = body.overallStatus;
         this.spm = body.spm;
+        this.date = body.date;
     }
     __decorate([
         (0, typeorm_1.PrimaryGeneratedColumn)(),
         __metadata("design:type", Number)
     ], SPMEntry.prototype, "id", void 0);
     __decorate([
-        (0, typeorm_1.Column)({
-            length: 10,
-            nullable: false
-        }),
+        (0, typeorm_1.Column)(),
         __metadata("design:type", String)
-    ], SPMEntry.prototype, "shift", void 0);
-    __decorate([
-        (0, typeorm_1.Column)({
-            length: 70,
-            nullable: false
-        }),
-        __metadata("design:type", String)
-    ], SPMEntry.prototype, "data", void 0);
+    ], SPMEntry.prototype, "qr", void 0);
     __decorate([
         (0, typeorm_1.Column)(),
         __metadata("design:type", Date)
     ], SPMEntry.prototype, "date", void 0);
+    __decorate([
+        (0, typeorm_1.Column)(),
+        __metadata("design:type", String)
+    ], SPMEntry.prototype, "rating", void 0);
+    __decorate([
+        (0, typeorm_1.Column)({
+            type: 'float'
+        }),
+        __metadata("design:type", Number)
+    ], SPMEntry.prototype, "resistance", void 0);
+    __decorate([
+        (0, typeorm_1.Column)({}),
+        __metadata("design:type", Boolean)
+    ], SPMEntry.prototype, "resistanceStauts", void 0);
+    __decorate([
+        (0, typeorm_1.Column)({
+            type: 'float'
+        }),
+        __metadata("design:type", Number)
+    ], SPMEntry.prototype, "hold", void 0);
+    __decorate([
+        (0, typeorm_1.Column)({}),
+        __metadata("design:type", Boolean)
+    ], SPMEntry.prototype, "holdStauts", void 0);
+    __decorate([
+        (0, typeorm_1.Column)({
+            type: 'float'
+        }),
+        __metadata("design:type", Number)
+    ], SPMEntry.prototype, "trip", void 0);
+    __decorate([
+        (0, typeorm_1.Column)({}),
+        __metadata("design:type", Boolean)
+    ], SPMEntry.prototype, "tripStauts", void 0);
+    __decorate([
+        (0, typeorm_1.Column)({}),
+        __metadata("design:type", Boolean)
+    ], SPMEntry.prototype, "hvStatus", void 0);
+    __decorate([
+        (0, typeorm_1.Column)({}),
+        __metadata("design:type", Boolean)
+    ], SPMEntry.prototype, "overallStatus", void 0);
     __decorate([
         (0, typeorm_1.ManyToOne)(function () { return SPM_1.SPM; }, function (spm) { return spm.entries; }, {
             orphanedRowAction: 'delete',

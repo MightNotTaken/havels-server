@@ -36,6 +36,7 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
     }
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.CalibrationBenchController = void 0;
 var db_1 = require("../../db");
 var Bench_1 = require("../entity/calibration-bench/Bench");
 var Pod_1 = require("../entity/calibration-bench/Pod");
@@ -52,10 +53,10 @@ var CalibrationBenchController = /** @class */ (function () {
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
-                        i = 0;
+                        i = 1;
                         _a.label = 1;
                     case 1:
-                        if (!(i < 3)) return [3 /*break*/, 8];
+                        if (!(i <= 3)) return [3 /*break*/, 8];
                         _a.label = 2;
                     case 2:
                         _a.trys.push([2, 6, , 7]);
@@ -87,75 +88,9 @@ var CalibrationBenchController = /** @class */ (function () {
             });
         });
     };
-    CalibrationBenchController.prototype.parseBuffer = function (data) {
-        return __awaiter(this, void 0, void 0, function () {
-            var keys, completed, _i, keys_1, key, buffer_1, _a, index, ver, cal, bar, shift, bench, pod, date, entry, error_2;
-            return __generator(this, function (_b) {
-                switch (_b.label) {
-                    case 0:
-                        _b.trys.push([0, 5, , 6]);
-                        data = JSON.parse(data);
-                        if (!data.bench) {
-                            return [2 /*return*/];
-                        }
-                        keys = ['index', 'cal', 'ver', 'bar', 'shift'];
-                        completed = true;
-                        for (_i = 0, keys_1 = keys; _i < keys_1.length; _i++) {
-                            key = keys_1[_i];
-                            buffer_1 = CalibrationBenchController.buffer;
-                            if (!buffer_1[data.bench]) {
-                                buffer_1[data.bench] = {};
-                            }
-                            if (data[key]) {
-                                buffer_1[data.bench][key] = data[key];
-                            }
-                            if (!buffer_1[data.bench][key]) {
-                                completed = false;
-                            }
-                        }
-                        if (!completed) return [3 /*break*/, 4];
-                        _a = CalibrationBenchController.buffer[data.bench], index = _a.index, ver = _a.ver, cal = _a.cal, bar = _a.bar, shift = _a.shift;
-                        return [4 /*yield*/, BenchRepository.findOne({
-                                where: {
-                                    name: data.bench
-                                },
-                                relations: ['pods']
-                            })];
-                    case 1:
-                        bench = _b.sent();
-                        if (!bench) {
-                            bench = CalibrationBenchController.createBench(data.bench);
-                        }
-                        pod = bench.pods[+index];
-                        date = new Date();
-                        return [4 /*yield*/, PodEntryRepository.create({
-                                verificationString: ver,
-                                calibrationString: cal,
-                                barcode: bar,
-                                shift: shift,
-                                date: date,
-                                pod: pod
-                            })];
-                    case 2:
-                        entry = _b.sent();
-                        return [4 /*yield*/, PodEntryRepository.save(entry)];
-                    case 3:
-                        _b.sent();
-                        delete CalibrationBenchController.buffer[data.bench];
-                        _b.label = 4;
-                    case 4: return [3 /*break*/, 6];
-                    case 5:
-                        error_2 = _b.sent();
-                        console.error(error_2);
-                        return [3 /*break*/, 6];
-                    case 6: return [2 /*return*/];
-                }
-            });
-        });
-    };
     CalibrationBenchController.createBench = function (name) {
         return __awaiter(this, void 0, void 0, function () {
-            var bench, i, pod, error_3;
+            var bench, i, pod, error_2;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
@@ -168,12 +103,13 @@ var CalibrationBenchController = /** @class */ (function () {
                         return [4 /*yield*/, BenchRepository.save(bench)];
                     case 2:
                         _a.sent();
-                        i = 0;
+                        i = 1;
                         _a.label = 3;
                     case 3:
-                        if (!(i < 24)) return [3 /*break*/, 7];
+                        if (!(i <= 24)) return [3 /*break*/, 7];
                         return [4 /*yield*/, PodRepository.create({
-                                name: "pod-".concat(i)
+                                name: "pod-".concat(i),
+                                stationID: i
                             })];
                     case 4:
                         pod = _a.sent();
@@ -193,8 +129,8 @@ var CalibrationBenchController = /** @class */ (function () {
                         })];
                     case 8: return [2 /*return*/, _a.sent()];
                     case 9:
-                        error_3 = _a.sent();
-                        console.error(error_3);
+                        error_2 = _a.sent();
+                        console.error(error_2);
                         return [2 /*return*/, null];
                     case 10: return [2 /*return*/];
                 }
@@ -204,6 +140,7 @@ var CalibrationBenchController = /** @class */ (function () {
     CalibrationBenchController.buffer = {};
     return CalibrationBenchController;
 }());
+exports.CalibrationBenchController = CalibrationBenchController;
 var calibrationBenchController = new CalibrationBenchController();
 exports.default = calibrationBenchController;
 //# sourceMappingURL=calibration-bench.controller.js.map

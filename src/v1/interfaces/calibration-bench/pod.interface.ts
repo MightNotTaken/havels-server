@@ -1,4 +1,9 @@
+import { CalibrationBench } from "../../entity/calibration-bench/Bench";
+import { CalibrationPodEntry } from "../../entity/calibration-bench/Entry";
+
 export interface CalibrationPodInterface {
-    id: number;
-    name: string;
+  name: string;
+  stationID: number;
+  bench: CalibrationBench;
+  entries: CalibrationPodEntry[];
 }

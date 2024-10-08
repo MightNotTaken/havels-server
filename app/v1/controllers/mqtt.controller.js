@@ -40,20 +40,18 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 var db_1 = require("../../db");
-var Shift_1 = require("../entity/Shift");
 var mqtt_util_1 = __importDefault(require("../utils/mqtt.util"));
 var Station_1 = require("../entity/Station");
-var ShiftCount_1 = require("../entity/ShiftCount");
-var calibration_bench_controller_1 = __importDefault(require("./calibration-bench.controller"));
 var SPM_1 = require("../entity/SPM/SPM");
 var Entry_1 = require("../entity/SPM/Entry");
 var HourlyStationCount_1 = require("../entity/HourlyStationCount");
-var ShiftRepository = db_1.AppDataSource.getTreeRepository(Shift_1.Shift);
+var Bench_1 = require("../entity/calibration-bench/Bench");
+var calibration_bench_controller_1 = require("./calibration-bench.controller");
 var StationRepository = db_1.AppDataSource.getTreeRepository(Station_1.Station);
 var HourlyCountRepository = db_1.AppDataSource.getTreeRepository(HourlyStationCount_1.HourlyCount);
-var ShiftCountRepository = db_1.AppDataSource.getTreeRepository(ShiftCount_1.ShiftCount);
 var SPMRepository = db_1.AppDataSource.getRepository(SPM_1.SPM);
 var SPMEntryRepository = db_1.AppDataSource.getRepository(Entry_1.SPMEntry);
+var CalBenchRepository = db_1.AppDataSource.getRepository(Bench_1.CalibrationBench);
 var MQTTController = /** @class */ (function () {
     function MQTTController() {
         var _this = this;
@@ -67,27 +65,26 @@ var MQTTController = /** @class */ (function () {
     MQTTController.prototype.registerDeviceEvents = function () {
         var _this = this;
         mqtt_util_1.default.listen('connect', function (data) { return __awaiter(_this, void 0, void 0, function () {
-            var _a, mac_1, station, stationData, shifts_1, error_1;
-            var _this = this;
+            var _a, mac, station, stationData, error_1;
             var _b;
             return __generator(this, function (_c) {
                 switch (_c.label) {
                     case 0:
-                        _c.trys.push([0, 6, , 7]);
-                        _a = JSON.parse(data), mac_1 = _a.mac, station = _a.station;
-                        console.log('connection', { mac: mac_1, station: station });
+                        _c.trys.push([0, 5, , 6]);
+                        _a = JSON.parse(data), mac = _a.mac, station = _a.station;
+                        console.log('connection', { mac: mac, station: station });
                         return [4 /*yield*/, StationRepository.findOne({
                                 where: {
                                     name: station
-                                },
-                                relations: ['shifts']
+                                }
                             })];
                     case 1:
                         stationData = _c.sent();
+                        console.log(stationData);
                         if (!!stationData) return [3 /*break*/, 4];
                         return [4 /*yield*/, StationRepository.create({
                                 name: station,
-                                mac: mac_1
+                                mac: mac
                             })];
                     case 2:
                         stationData = _c.sent();
@@ -95,24 +92,97 @@ var MQTTController = /** @class */ (function () {
                     case 3:
                         _c.sent();
                         _c.label = 4;
-                    case 4: return [4 /*yield*/, ShiftRepository.find()];
+                    case 4:
+                        (_b = this.client) === null || _b === void 0 ? void 0 : _b.publish("".concat(mac, "/utc"), this.getTime() + '_' + this.getDate());
+                        return [3 /*break*/, 6];
                     case 5:
-                        shifts_1 = _c.sent();
-                        setTimeout(function () {
-                            _this.updateShifts(mac_1, JSON.stringify(shifts_1));
-                        }, 1000);
-                        (_b = this.client) === null || _b === void 0 ? void 0 : _b.publish("".concat(mac_1, "/utc"), this.getTime() + '_' + this.getDate());
-                        return [3 /*break*/, 7];
-                    case 6:
                         error_1 = _c.sent();
                         console.error(error_1);
-                        return [3 /*break*/, 7];
-                    case 7: return [2 /*return*/];
+                        return [3 /*break*/, 6];
+                    case 6: return [2 /*return*/];
+                }
+            });
+        }); });
+        mqtt_util_1.default.listen("spm:connect", function (data) { return __awaiter(_this, void 0, void 0, function () {
+            var _a, mac, station, spm, error_2;
+            var _b, _c;
+            return __generator(this, function (_d) {
+                switch (_d.label) {
+                    case 0:
+                        _d.trys.push([0, 7, , 8]);
+                        _a = JSON.parse(data), mac = _a.mac, station = _a.station;
+                        return [4 /*yield*/, SPMRepository.findOne({ where: { mac: mac } })];
+                    case 1:
+                        spm = _d.sent();
+                        if (!!spm) return [3 /*break*/, 4];
+                        return [4 /*yield*/, SPMRepository.create({ mac: mac, name: station })];
+                    case 2:
+                        spm = _d.sent();
+                        return [4 /*yield*/, SPMRepository.save(spm)];
+                    case 3:
+                        _d.sent();
+                        return [3 /*break*/, 6];
+                    case 4:
+                        if (!(spm.name !== station)) return [3 /*break*/, 6];
+                        return [4 /*yield*/, SPMRepository.update(spm, { name: station })];
+                    case 5:
+                        _d.sent();
+                        _d.label = 6;
+                    case 6:
+                        (_b = this.client) === null || _b === void 0 ? void 0 : _b.publish("".concat(mac, "/id"), "".concat(spm.id));
+                        (_c = this.client) === null || _c === void 0 ? void 0 : _c.publish("".concat(mac, "/utc"), this.getTime() + '_' + this.getDate());
+                        return [3 /*break*/, 8];
+                    case 7:
+                        error_2 = _d.sent();
+                        console.error(error_2);
+                        return [3 /*break*/, 8];
+                    case 8: return [2 /*return*/];
+                }
+            });
+        }); });
+        mqtt_util_1.default.listen("spm:data", function (data) { return __awaiter(_this, void 0, void 0, function () {
+            var _a, id, qr, rating, resistance, resistanceStauts, hold, holdStauts, trip, tripStauts, hvStatus, overallStatus, spm, entry, error_3;
+            return __generator(this, function (_b) {
+                switch (_b.label) {
+                    case 0:
+                        _b.trys.push([0, 5, , 6]);
+                        _a = JSON.parse(data), id = _a[0], qr = _a[1], rating = _a[2], resistance = _a[3], resistanceStauts = _a[4], hold = _a[5], holdStauts = _a[6], trip = _a[7], tripStauts = _a[8], hvStatus = _a[9], overallStatus = _a[10];
+                        return [4 /*yield*/, SPMRepository.findOne({ where: { id: +id } })];
+                    case 1:
+                        spm = _b.sent();
+                        if (!spm) return [3 /*break*/, 4];
+                        return [4 /*yield*/, SPMEntryRepository.create({
+                                qr: qr,
+                                rating: rating,
+                                resistance: resistance,
+                                resistanceStauts: resistanceStauts,
+                                hold: hold,
+                                holdStauts: holdStauts,
+                                trip: trip,
+                                tripStauts: tripStauts,
+                                hvStatus: hvStatus,
+                                overallStatus: overallStatus,
+                                spm: spm,
+                                date: new Date()
+                            })];
+                    case 2:
+                        entry = _b.sent();
+                        return [4 /*yield*/, SPMEntryRepository.save(entry)];
+                    case 3:
+                        _b.sent();
+                        console.log(entry);
+                        _b.label = 4;
+                    case 4: return [3 /*break*/, 6];
+                    case 5:
+                        error_3 = _b.sent();
+                        console.error(error_3);
+                        return [3 /*break*/, 6];
+                    case 6: return [2 /*return*/];
                 }
             });
         }); });
         mqtt_util_1.default.listen("hourly-station-count", function (data) { return __awaiter(_this, void 0, void 0, function () {
-            var _a, hour, stationName, count, mac, station, date, hourlyCount, error_2;
+            var _a, hour, stationName, count, mac, station, date, hourlyCount, error_4;
             return __generator(this, function (_b) {
                 switch (_b.label) {
                     case 0:
@@ -129,7 +199,7 @@ var MQTTController = /** @class */ (function () {
                         if (!!station) return [3 /*break*/, 4];
                         return [4 /*yield*/, StationRepository.create({
                                 name: stationName,
-                                mac: data.mac
+                                mac: mac
                             })];
                     case 2:
                         station = _b.sent();
@@ -171,118 +241,48 @@ var MQTTController = /** @class */ (function () {
                         _b.sent();
                         return [3 /*break*/, 11];
                     case 10:
-                        error_2 = _b.sent();
-                        console.error(error_2);
+                        error_4 = _b.sent();
+                        console.error(error_4);
                         return [3 /*break*/, 11];
                     case 11: return [2 /*return*/];
                 }
             });
         }); });
-        // MQTTService.listen("station-count", async (data) => {
-        //     try {
-        //         data = JSON.parse(data);
-        //         console.log(data);
-        //         const name = data.station;
-        //         let station = await StationRepository.findOne({
-        //             where: {
-        //                 name
-        //             },
-        //             relations: ['shifts']
-        //         });
-        //         if (!station) {
-        //             station = await StationRepository.create({
-        //                 name,
-        //                 mac: data.mac
-        //             });
-        //         }
-        //         if (!station.shifts) {
-        //             station.shifts = [];
-        //         }
-        //         let shift: ShiftCount = station.shifts?.filter(shift => getDateStamp(shift.date) == data.date && shift.name == data.current)[0];
-        //         if (!shift) {
-        //             let date = new Date();
-        //             shift = await ShiftCountRepository.create({
-        //                 name: data.current,
-        //                 date,
-        //                 count: +data[data.current]
-        //             });
-        //             station.shifts.push(shift);
-        //         } else {
-        //             shift.count = +data[data.current];
-        //         }
-        //         await StationRepository.save(station);
-        //         await ShiftCountRepository.save(shift);
-        //         const response: any = {};
-        //         response.current = data.current;
-        //         response[data.current] = +data[data.current];
-        //         response["station"] = data.station;
-        //         this.client.publish(`${data.mac}/reset-count`, JSON.stringify(response));
-        //     } catch (error) {
-        //         console.error(error);
-        //     }
-        // });
-        mqtt_util_1.default.listen("calibration-bench", function (data) { return __awaiter(_this, void 0, void 0, function () {
-            return __generator(this, function (_a) {
-                try {
-                    console.log("calibration-bench", data);
-                    calibration_bench_controller_1.default.parseBuffer(data);
+        mqtt_util_1.default.listen("calib:connect", function (data) { return __awaiter(_this, void 0, void 0, function () {
+            var _a, mac, name, bench, error_5;
+            var _b, _c;
+            return __generator(this, function (_d) {
+                switch (_d.label) {
+                    case 0:
+                        _d.trys.push([0, 3, , 4]);
+                        _a = JSON.parse(data), mac = _a.mac, name = _a.name;
+                        return [4 /*yield*/, CalBenchRepository.findOne({ where: { mac: mac } })];
+                    case 1:
+                        bench = _d.sent();
+                        if (!bench) {
+                            bench = calibration_bench_controller_1.CalibrationBenchController.createBench(name);
+                        }
+                        bench.mac = mac;
+                        return [4 /*yield*/, CalBenchRepository.save(bench)];
+                    case 2:
+                        _d.sent();
+                        (_b = this.client) === null || _b === void 0 ? void 0 : _b.publish("".concat(mac, "/utc"), this.getTime() + '_' + this.getDate());
+                        (_c = this.client) === null || _c === void 0 ? void 0 : _c.publish("".concat(mac, "/bench-id"), bench.id);
+                        return [3 /*break*/, 4];
+                    case 3:
+                        error_5 = _d.sent();
+                        return [3 /*break*/, 4];
+                    case 4: return [2 /*return*/];
                 }
-                catch (error) {
-                    console.error(error);
-                }
-                return [2 /*return*/];
             });
         }); });
-        mqtt_util_1.default.listen("spm", function (_data) { return __awaiter(_this, void 0, void 0, function () {
-            var _a, name, data, shift, spm, date, entry, error_3;
-            return __generator(this, function (_b) {
-                switch (_b.label) {
-                    case 0:
-                        _b.trys.push([0, 7, , 8]);
-                        _a = JSON.parse(_data), name = _a.name, data = _a.data, shift = _a.shift;
-                        console.log('spm', {
-                            name: name,
-                            data: data,
-                            shift: shift
-                        });
-                        return [4 /*yield*/, SPMRepository.findOne({
-                                where: {
-                                    name: name
-                                }
-                            })];
-                    case 1:
-                        spm = _b.sent();
-                        if (!!spm) return [3 /*break*/, 4];
-                        console.log("creating spm");
-                        return [4 /*yield*/, SPMRepository.create({
-                                name: name
-                            })];
-                    case 2:
-                        spm = _b.sent();
-                        return [4 /*yield*/, SPMRepository.save(spm)];
-                    case 3:
-                        _b.sent();
-                        _b.label = 4;
-                    case 4:
-                        date = new Date();
-                        return [4 /*yield*/, SPMEntryRepository.create({
-                                data: data,
-                                date: date,
-                                shift: shift,
-                                spm: spm
-                            })];
-                    case 5:
-                        entry = _b.sent();
-                        return [4 /*yield*/, SPMEntryRepository.save(entry)];
-                    case 6:
-                        _b.sent();
-                        return [3 /*break*/, 8];
-                    case 7:
-                        error_3 = _b.sent();
-                        console.error(error_3);
-                        return [3 /*break*/, 8];
-                    case 8: return [2 /*return*/];
+        mqtt_util_1.default.listen("event", function (data) { return __awaiter(_this, void 0, void 0, function () {
+            return __generator(this, function (_a) {
+                try {
                 }
+                catch (error) {
+                }
+                return [2 /*return*/];
             });
         }); });
     };

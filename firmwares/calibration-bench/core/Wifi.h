@@ -68,13 +68,13 @@ JSON Wifi_T::scanCompletionCallback() {
     float percentMatch;
     console.log(i+1, WiFi.SSID(i));
     if (WiFi.encryptionType(i) == WIFI_AUTH_OPEN) {
-      JSON match;
+      /*JSON match;
       match["RSSI"] = WiFi.RSSI(i);
       match["apName"] = WiFi.SSID(i);
       match["match"] = WiFi.SSID(i);
       match["apPass"] = "";
       match["percent"] = 100;
-      matched.push_back(match);
+      matched.push_back(match);*/
     } else {
       auto match = this->find([i, &percentMatch](JSON& wifi) {
         StringMatcher matcher(wifi["apName"].toString(), WiFi.SSID(i));
@@ -109,15 +109,15 @@ Wifi_T::Wifi_T() {
 }
 
 void Wifi_T::begin(const JSON& defaultContent) {
-  if (!Database::hasFile("/wifi.json")) {
-    Database::writeFile("/wifi.json", defaultContent.toString());
+  if (!Database::hasFile("/_wifi.conf")) {
+    Database::writeFile("/_wifi.conf", defaultContent.toString());
   }
-  if (Database::readFile("/wifi.json")) {
+  if (Database::readFile("/_wifi.conf")) {
     console.log("Credentials loaded from database", Database::payload());
     if (JSON::isJSON(Database::payload())) {
       this->resetContent(Database::payload());
     } else {
-      Database::writeFile("/wifi.json", defaultContent.toString());
+      Database::writeFile("/_wifi.conf", defaultContent.toString());
       this->resetContent(defaultContent.toString());
     }
   } else {
@@ -145,7 +145,7 @@ void Wifi_T::update(std::function<bool(JSON&)> predicate, const JSON& newValue) 
 }
 
 void Wifi_T::save() {
-  if (!Database::writeFile("/wifi.json", this->toString())) {
+  if (!Database::writeFile("/_wifi.conf", this->toString())) {
     console.log("unable to save to database");
   }
 }

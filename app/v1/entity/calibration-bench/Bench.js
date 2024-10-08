@@ -10,6 +10,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.CalibrationBench = void 0;
+// Bench.ts
 var typeorm_1 = require("typeorm");
 var Pod_1 = require("./Pod");
 var CalibrationBench = /** @class */ (function () {
@@ -18,6 +19,7 @@ var CalibrationBench = /** @class */ (function () {
             return;
         }
         this.name = body.name;
+        this.mac = body.mac;
     }
     __decorate([
         (0, typeorm_1.PrimaryGeneratedColumn)(),
@@ -30,6 +32,13 @@ var CalibrationBench = /** @class */ (function () {
         }),
         __metadata("design:type", String)
     ], CalibrationBench.prototype, "name", void 0);
+    __decorate([
+        (0, typeorm_1.Column)({
+            length: 30,
+            nullable: true
+        }),
+        __metadata("design:type", String)
+    ], CalibrationBench.prototype, "mac", void 0);
     __decorate([
         (0, typeorm_1.OneToMany)(function () { return Pod_1.CalibrationPod; }, function (pod) { return pod.bench; }, {
             cascade: true,

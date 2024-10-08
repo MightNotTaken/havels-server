@@ -18,8 +18,8 @@ var CalibrationPod = /** @class */ (function () {
         if (!body) {
             return;
         }
-        this.entries = [];
         this.name = body.name;
+        this.stationID = body.stationID;
     }
     __decorate([
         (0, typeorm_1.PrimaryGeneratedColumn)(),
@@ -27,10 +27,17 @@ var CalibrationPod = /** @class */ (function () {
     ], CalibrationPod.prototype, "id", void 0);
     __decorate([
         (0, typeorm_1.Column)({
-            length: 10
+            length: 50,
+            nullable: false
         }),
         __metadata("design:type", String)
     ], CalibrationPod.prototype, "name", void 0);
+    __decorate([
+        (0, typeorm_1.Column)({
+            nullable: false
+        }),
+        __metadata("design:type", Number)
+    ], CalibrationPod.prototype, "stationID", void 0);
     __decorate([
         (0, typeorm_1.ManyToOne)(function () { return Bench_1.CalibrationBench; }, function (bench) { return bench.pods; }, {
             orphanedRowAction: 'delete',

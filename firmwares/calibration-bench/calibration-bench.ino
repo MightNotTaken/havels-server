@@ -1,17 +1,14 @@
-#include "./core/core.h"
-#include "./core/JSON.h"
-#include "./core/database.h"
-#include "./core/Wifi.h"
-#include "./core/utility/console.h"
-#include "./core/mqtt.h"
-#include "./core/mac.h"
+#include "core/core.h"
+#include "core/JSON.h"
+#include "core/database.h"
+#include "core/Wifi.h"
+#include "core/utility/console.h"
+#include "core/mqtt.h"
+#include "core/mac.h"
 #include "config.h"
-#include "./core/time.h"
-#include "./core/OTA.h"
-#include "shift.h"
-#include "data-source.h"
-#include "barcode.h"
-#include "./core/gpio.h"
+#include "core/time.h"
+#include "core/OTA.h"
+#include "data.h"
 using namespace Core;
 
 void setupWiFi();
@@ -21,49 +18,15 @@ void setupServerRoutes();
 
 void setup() {
   Serial.begin(9600);
-  GPIOs::begin();
-  barcodeReader.begin();
+  
   Database::begin();
+  DataSource::begin();
+  
   Configuration::begin();
-  Shifts::begin();
   setupWiFi();
   setupMQTT();
   initializeOTAEvents();
   setupServerRoutes();
-  DataSource::begin();
-  DataSource::onData([](PodData& podData) {
-    console.log(podData );
-    if (barcodeReader.available(podData.getIndex())) {
-      podData.setBarcodeData(barcodeReader.read(podData.getIndex()));
-      JSON data = podData.toString();
-      data["shift"] = Shifts::currentShift(getTimeStamp())["name"];
-      JSON keys("[index,bar,ver,cal,shift]");
-      JSON response;
-      for (int i=0; i<keys.size(); i++) {
-        response["bench"] = DEVICE_STATION;
-        String key = keys[i].toString();
-        response[key] = data[key].toString();
-      }
-      console.log(response.toString());
-      wifiMQTT.publish("calibration-bench", response.toString().c_str());
-    }
-  });
-  
-  setInterval([]() {
-    //wifi input should be line [{"apName":"tahir 2.4g","apPass":"12345678"}]
-    if (Serial.available()) {
-      String rawData = Serial.readString();
-      rawData.trim();
-      JSON data(rawData);
-      if (data.size() == 1) {
-        Wifi.resetContent(data.toString());
-        Wifi.save();
-        setTimeout([]() {
-          ESP.restart();
-        }, 1000);
-      }
-    }
-  }, 1000);
 }
 
 void loop() {
@@ -74,6 +37,8 @@ void setupWiFi() {
   Wifi.on("connect", []() {
     console.log("Wifi connecting");
   });
+  Wifi.on("scanning", []() {});
+  Wifi.on("connecting", []() {});
   Wifi.on("connected", []() {
     console.log("Wifi connected");
     Serial.println(WiFi.localIP());
@@ -85,22 +50,31 @@ void setupWiFi() {
     Wifi.turnOnHotspot(PRODUCT_NAME + "_" + MAC::getMac(), "12345678", false);
     webServer.begin(DEVICE_TYPE);
   });
-  Wifi.begin("[{\"apName\":\"BuckByte\",\"apPass\":\"Airtel@123\"}]");
-
+  Wifi.begin("[{\"apName\":\"fitfab\",\"apPass\":\"12345678\"}]");
+  // Wifi.begin("[{\"apName\":\"QRG_VSMS\",\"apPass\":\"vsms@123\"}]");
 }
+
+IntervalReference connectionTracker;
 
 void setupMQTT() {
   static String status = "";
   wifiMQTT.on("connected", [](String message) {
     console.log("mqtt connected");
-    Time::listenToUTC();
+    Timer::listenToUTC();
     OTA::listenToUpdates(DEVICE_TYPE);
-    Time::onSync([](String stamp) {
+    Timer::onSync([](String difference) {
+      clearImmediate(connectionTracker);
+      console.log("time synchronized");
     });
-    Shifts::listenToChanges();
-    setTimeout([]() {
-      wifiMQTT.emit("connect", Configuration::Device::toString());
-    }, 400);
+    wifiMQTT.listen("/reset-all", [](String response) {
+      Counters::resetAll();
+    });
+    wifiMQTT.listen(MAC::getMac() + "/bench-id", [](String id) {
+
+    });
+    connectionTracker = setImmediate([]() {
+      wifiMQTT.emit("calib:connect", Configuration::Device::toString());
+    }, 2000);
   });
   wifiMQTT.on("failure", [&status](String message) {
     console.log("MQTT disconnected");
@@ -118,6 +92,7 @@ void setupMQTT() {
     }
   }, 5000);
 }
+
 
 void initializeOTAEvents() {
   OTA::whileProgramming([](int percentage) {

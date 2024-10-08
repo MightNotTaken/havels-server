@@ -8,7 +8,6 @@
 #include "core/Wifi.h"
 #include "core/web-server.h"
 #include "board.h"
-#include "shift.h"
 #include "core/counter.h"
 #include "core/utility/console.h"
 #include "core/clock.h"
@@ -44,7 +43,7 @@ namespace Configuration {
       });
     }
     void begin() {
-      creds["server"] = "192.168.227.137";
+      creds["server"] = "192.168.100.150";
       creds["port"] = 1883;
       creds["username"] = "";
       creds["password"] = "";

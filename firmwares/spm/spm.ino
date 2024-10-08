@@ -8,8 +8,7 @@
 #include "config.h"
 #include "core/time.h"
 #include "core/OTA.h"
-#include "shift.h"
-#include "data-source.h"
+#include "data.h"
 using namespace Core;
 
 void setupWiFi();
@@ -18,39 +17,22 @@ void initializeOTAEvents();
 void setupServerRoutes();
 
 void setup() {
-  Serial.begin(115200);
+  Serial.begin(9600);
+  
   Database::begin();
+  DataSource::begin();
+  DataSource::onData([](String data) {
+    console.log(data);
+    if (wifiMQTT.connected()) {
+      wifiMQTT.emit("spm:data", data.c_str());
+    }
+  });
   Configuration::begin();
-  Shifts::begin();
   setupWiFi();
   setupMQTT();
   initializeOTAEvents();
   setupServerRoutes();
-  DataSource::begin();
-  DataSource::onData([](String& _data) {
-    JSON data("{}");
-    data["data"] = _data;
-    data["shift"] = Shifts::currentShift(getTimeStamp())["name"];
-    data["name"] = DEVICE_STATION;
-    console.log(data);
-    wifiMQTT.publish("spm", data.toString().c_str());
-  });
-  
-  setInterval([]() {
-    //wifi input should be line [{"apName":"tahir 2.4g","apPass":"12345678"}]
-    if (Serial.available()) {
-      String rawData = Serial.readString();
-      rawData.trim();
-      JSON data(rawData);
-      if (data.size() == 1) {
-        Wifi.resetContent(data);
-        Wifi.save();
-        setTimeout([]() {
-          ESP.restart();
-        }, 1000);
-      }
-    }
-  }, 1000);
+
 }
 
 void loop() {
@@ -61,6 +43,8 @@ void setupWiFi() {
   Wifi.on("connect", []() {
     console.log("Wifi connecting");
   });
+  Wifi.on("scanning", []() {});
+  Wifi.on("connecting", []() {});
   Wifi.on("connected", []() {
     console.log("Wifi connected");
     Serial.println(WiFi.localIP());
@@ -72,21 +56,32 @@ void setupWiFi() {
     Wifi.turnOnHotspot(PRODUCT_NAME + "_" + MAC::getMac(), "12345678", false);
     webServer.begin(DEVICE_TYPE);
   });
-  Wifi.begin("[]");
+  Wifi.begin("[{\"apName\":\"fitfab\",\"apPass\":\"12345678\"}]");
+  // Wifi.begin("[{\"apName\":\"QRG_VSMS\",\"apPass\":\"vsms@123\"}]");
 }
+
+IntervalReference connectionTracker;
 
 void setupMQTT() {
   static String status = "";
   wifiMQTT.on("connected", [](String message) {
     console.log("mqtt connected");
-    Time::listenToUTC();
+    Timer::listenToUTC();
     OTA::listenToUpdates(DEVICE_TYPE);
-    Time::onSync([](String stamp) {
+    Timer::onSync([](String difference) {
+      clearImmediate(connectionTracker);
+      console.log("time synchronized");
     });
-    Shifts::listenToChanges();
-    setTimeout([]() {
-      wifiMQTT.emit("connect", Configuration::Device::toString());
-    }, 400);
+    wifiMQTT.listen("/reset-all", [](String response) {
+      Counters::resetAll();
+    });
+    wifiMQTT.listen(MAC::getMac() + "/id", [](String id) {
+      console.log("setting datasource id", id);
+      dataSource.setID(id.toInt());
+    });
+    connectionTracker = setImmediate([]() {
+      wifiMQTT.emit("spm:connect", Configuration::Device::toString());
+    }, 2000);
   });
   wifiMQTT.on("failure", [&status](String message) {
     console.log("MQTT disconnected");
@@ -104,6 +99,7 @@ void setupMQTT() {
     }
   }, 5000);
 }
+
 
 void initializeOTAEvents() {
   OTA::whileProgramming([](int percentage) {

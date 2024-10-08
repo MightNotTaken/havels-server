@@ -1,24 +1,21 @@
 import { Console } from "console";
 import { AppDataSource } from "../../db";
-import { Shift } from "../entity/Shift";
 import MQTTService from "../utils/mqtt.util";
 
 import { MqttClient } from "mqtt/*";
 import { Station } from "../entity/Station";
-import { getDateStamp } from "../utils/house-keeping.utils";
-import { ShiftCount } from "../entity/ShiftCount";
-import calibrationBenchController from "./calibration-bench.controller";
 import { SPM } from "../entity/SPM/SPM";
 import { SPMEntry } from "../entity/SPM/Entry";
 import { HourlyCount } from "../entity/HourlyStationCount";
+import { CalibrationBench } from "../entity/calibration-bench/Bench";
+import calibrationBenchController, { CalibrationBenchController } from "./calibration-bench.controller";
 
 
-const ShiftRepository = AppDataSource.getTreeRepository(Shift);
 const StationRepository = AppDataSource.getTreeRepository(Station);
 const HourlyCountRepository = AppDataSource.getTreeRepository(HourlyCount);
-const ShiftCountRepository = AppDataSource.getTreeRepository(ShiftCount);
 const SPMRepository = AppDataSource.getRepository(SPM);
 const SPMEntryRepository = AppDataSource.getRepository(SPMEntry);
+const CalBenchRepository = AppDataSource.getRepository(CalibrationBench);
 
 class MQTTController {
     client: MqttClient = null;
@@ -38,9 +35,9 @@ class MQTTController {
                 let stationData = await StationRepository.findOne({
                     where: {
                         name: station
-                    },
-                    relations: ['shifts']
+                    }
                 });
+                console.log(stationData)
                 if (!stationData) {
                     stationData = await StationRepository.create({
                         name: station,
@@ -48,12 +45,40 @@ class MQTTController {
                     });
                     await StationRepository.save(stationData);
                 }
-                const shifts = await ShiftRepository.find();
 
-                setTimeout(() => {
-                    this.updateShifts(mac, JSON.stringify(shifts));
-                }, 1000);
                 this.client?.publish(`${mac}/utc`, this.getTime() + '_' + this.getDate());
+            } catch (error) {
+                console.error(error);
+            }
+        });
+        MQTTService.listen("spm:connect", async (data) => {
+            try {
+                const {mac, station} = JSON.parse(data);
+                let spm = await SPMRepository.findOne({where: {mac}});
+                if (!spm) {
+                    spm = await SPMRepository.create({mac, name: station});
+                    await SPMRepository.save(spm);
+                } else if (spm.name !== station) {
+                    await SPMRepository.update(spm, {name: station});
+                }
+                
+                this.client?.publish(`${mac}/id`, `${spm.id}`);
+                this.client?.publish(`${mac}/utc`, this.getTime() + '_' + this.getDate());
+            } catch (error) {
+                console.error(error);
+            }
+        });
+        MQTTService.listen("spm:data", async (data) => {
+            try {
+                const [id, qr, rating, resistance, resistanceStauts, hold, holdStauts, trip, tripStauts, hvStatus, overallStatus] = JSON.parse(data);
+                let spm = await SPMRepository.findOne({where: {id: +id}});
+                if (spm) {
+                    let entry = await SPMEntryRepository.create({
+                        qr, rating, resistance, resistanceStauts, hold, holdStauts, trip, tripStauts, hvStatus, overallStatus, spm, date: new Date()
+                    } as any);
+                    await SPMEntryRepository.save(entry);
+                    console.log(entry);
+                }
             } catch (error) {
                 console.error(error);
             }
@@ -71,7 +96,7 @@ class MQTTController {
                 if (!station) {
                     station = await StationRepository.create({
                         name: stationName,
-                        mac: data.mac
+                        mac: mac
                     });
                     await StationRepository.save(station);
                 };
@@ -103,88 +128,27 @@ class MQTTController {
                 console.error(error);
             }
         });
-        // MQTTService.listen("station-count", async (data) => {
-        //     try {
-        //         data = JSON.parse(data);
-        //         console.log(data);
-        //         const name = data.station;
-        //         let station = await StationRepository.findOne({
-        //             where: {
-        //                 name
-        //             },
-        //             relations: ['shifts']
-        //         });
-        //         if (!station) {
-        //             station = await StationRepository.create({
-        //                 name,
-        //                 mac: data.mac
-        //             });
-        //         }
-        //         if (!station.shifts) {
-        //             station.shifts = [];
-        //         }
-        //         let shift: ShiftCount = station.shifts?.filter(shift => getDateStamp(shift.date) == data.date && shift.name == data.current)[0];
-        //         if (!shift) {
-        //             let date = new Date();
-        //             shift = await ShiftCountRepository.create({
-        //                 name: data.current,
-        //                 date,
-        //                 count: +data[data.current]
-        //             });
-        //             station.shifts.push(shift);
-        //         } else {
-        //             shift.count = +data[data.current];
-        //         }
-        //         await StationRepository.save(station);
-                
-        //         await ShiftCountRepository.save(shift);
-        //         const response: any = {};
-        //         response.current = data.current;
-        //         response[data.current] = +data[data.current];
-        //         response["station"] = data.station;
-        //         this.client.publish(`${data.mac}/reset-count`, JSON.stringify(response));
-        //     } catch (error) {
-        //         console.error(error);
-        //     }
-        // });
-        MQTTService.listen("calibration-bench", async (data) => {
+        MQTTService.listen("calib:connect", async (data) => {
             try {
-                console.log("calibration-bench", data);
-                calibrationBenchController.parseBuffer(data);
+                const {mac, name} = JSON.parse(data);
+                let bench: any = await CalBenchRepository.findOne({where: {mac}});
+                if (!bench) {
+                    bench = CalibrationBenchController.createBench(name);
+                }
+                bench.mac = mac;
+                await CalBenchRepository.save(bench);
+
+                this.client?.publish(`${mac}/utc`, this.getTime() + '_' + this.getDate());
+                this.client?.publish(`${mac}/bench-id`, bench.id);
             } catch (error) {
-                console.error(error)
+
             }
         });
-        MQTTService.listen("spm", async (_data) => {
+        MQTTService.listen("event", async (data) => {
             try {
-                const {
-                    name, data, shift
-                } = JSON.parse(_data);
-                console.log('spm', {
-                    name, data, shift
-                })
-                let spm = await SPMRepository.findOne({
-                    where: {
-                        name
-                    }
-                });
-                if (!spm) {
-                    console.log("creating spm")
-                    spm = await SPMRepository.create({
-                        name
-                    });
-                    await SPMRepository.save(spm);
-                }
-                const date = new Date();
-                const entry = await SPMEntryRepository.create({
-                    data,
-                    date,
-                    shift,
-                    spm
-                });
-                await SPMEntryRepository.save(entry);
+
             } catch (error) {
-                console.error(error);
+
             }
         });
     }

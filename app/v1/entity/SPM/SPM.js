@@ -18,6 +18,7 @@ var SPM = /** @class */ (function () {
             return;
         }
         this.name = body.name;
+        this.mac = body.mac;
     }
     __decorate([
         (0, typeorm_1.PrimaryGeneratedColumn)(),
@@ -29,6 +30,12 @@ var SPM = /** @class */ (function () {
         }),
         __metadata("design:type", String)
     ], SPM.prototype, "name", void 0);
+    __decorate([
+        (0, typeorm_1.Column)({
+            nullable: true
+        }),
+        __metadata("design:type", String)
+    ], SPM.prototype, "mac", void 0);
     __decorate([
         (0, typeorm_1.OneToMany)(function () { return Entry_1.SPMEntry; }, function (entry) { return entry.spm; }, {
             cascade: true,

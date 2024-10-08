@@ -8,7 +8,6 @@
 #include "config.h"
 #include "core/time.h"
 #include "core/OTA.h"
-#include "shift.h"
 
 using namespace Core;
 
@@ -23,29 +22,10 @@ void setup() {
   Database::begin();
   
   Configuration::begin();
-  Shifts::begin();
   setupWiFi();
   setupMQTT();
   initializeOTAEvents();
   setupServerRoutes();
-  
-  setInterval([]() {
-    //wifi input should be line [{"apName":"tahir 2.4g","apPass":"12345678"}]
-    if (Serial.available()) {
-      String rawData = Serial.readString();
-      rawData.trim();
-      JSON data(rawData);
-      if (data.size() == 1) {
-        Wifi.resetContent(data.toString());
-        Wifi.save();
-        setTimeout([]() {
-          ESP.restart();
-        }, 1000);
-      } else if (data.size() == 3) {
-        Shifts::updateShifts(data);
-      }
-    }
-  }, 1000);
 }
 
 void loop() {
@@ -94,7 +74,6 @@ void setupMQTT() {
     wifiMQTT.listen("/reset-all", [](String response) {
       Counters::resetAll();
     });
-    Shifts::listenToChanges();
     connectionTracker = setImmediate([]() {
       wifiMQTT.emit("connect", Configuration::Device::toString());
     }, 2000);

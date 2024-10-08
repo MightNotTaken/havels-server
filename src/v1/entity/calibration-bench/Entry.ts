@@ -1,7 +1,14 @@
-import { Column, Entity, ManyToOne, OneToMany, PrimaryGeneratedColumn } from "typeorm";
+import { 
+  Column, 
+  Entity, 
+  ManyToOne, 
+  PrimaryGeneratedColumn, 
+  JoinColumn 
+} from "typeorm";
 import { CalibrationBench } from "./Bench";
 import { CalibrationPod } from "./Pod";
 import { CalibrationPodEntryInterface } from "../../interfaces/calibration-bench/entry";
+import { Batch } from "./Batch";  
 
 @Entity()
 export class CalibrationPodEntry {
@@ -11,25 +18,17 @@ export class CalibrationPodEntry {
   @Column({
     nullable: false
   })
-  calibrationString: string;
-
-  @Column({
-    nullable: false
-  })
-  verificationString: string;
-
-  @Column({
-    nullable: false
-  })
-  shift: string;
-
-  @Column({
-    nullable: false
-  })
   barcode: string;
 
-  @Column()
-  date: Date;
+  @Column({
+    nullable: false
+  })
+  tripTime: number;
+
+  @Column({
+    nullable: false
+  })
+  result: boolean;
 
   @ManyToOne(() => CalibrationPod, (pod) => pod.entries, {
     orphanedRowAction: 'delete',
@@ -38,15 +37,23 @@ export class CalibrationPodEntry {
   })
   pod: CalibrationPod;
 
+  
+  @ManyToOne(() => Batch, {
+    nullable: false,  
+    onDelete: 'CASCADE',  
+    onUpdate: 'CASCADE',  
+  })
+  @JoinColumn({ name: 'batch_id' })  
+  batch: Batch;
+
   constructor(body: CalibrationPodEntryInterface) {
     if (!body) {
       return;
     }
-    this.calibrationString = body.calibrationString;
-    this.verificationString = body.verificationString;
-    this.shift = body.shift;
     this.barcode = body.barcode;
     this.pod = body.pod;
-    this.date = body.date;
+    this.result = body.result;
+    this.tripTime = body.tripTime;
+    this.batch = body.batch;  
   }
 }

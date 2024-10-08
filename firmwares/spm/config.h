@@ -8,12 +8,13 @@
 #include "core/Wifi.h"
 #include "core/web-server.h"
 #include "board.h"
-#include "shift.h"
+#include "core/counter.h"
+#include "core/utility/console.h"
+#include "core/clock.h"
 
-#define PRODUCT_NAME               String("CALIBRATION_BENCH")
+#define PRODUCT_NAME               String("SPM")
 #define FIRMWARE_VERSION           String("1.0.0")
-#define DEVICE_TYPE                String("spm-0")
-#define DEVICE_STATION             String("spm-0")
+#define DEVICE_TYPE                String("spm")
 
 namespace Configuration {
   namespace MQTT {
@@ -24,7 +25,7 @@ namespace Configuration {
         JSON response;
         console.log("body", body);
         if (body.contains("server") && body.contains("port") && body.contains("username") && body.contains("password")) {
-          Database::writeFile("/mqtt/creds", body.toString());
+          Database::writeFile("/mqtt/creds.conf", body.toString());
           creds = body;
           response["message"] = "Credentials successfully updated";
           wifiMQTT.begin(creds);
@@ -40,24 +41,31 @@ namespace Configuration {
         return std::make_pair(400, response.toString());
       });
     }
-
     void begin() {
-      if (!Database::hasFile("/mqtt/creds")) {
-        Database::writeFile("/mqtt/creds", "{}");
+      creds["server"] = "192.168.247.123";
+      creds["port"] = 1883;
+      creds["username"] = "";
+      creds["password"] = "";
+      // creds["username"] = "vsms";
+      // creds["password"] = "VSMS@123";
+      
+      if (Database::hasFile("/mqtt/creds.conf")) {
+        Database::writeFile("/mqtt/creds.conf", creds.toString());
       }
-      if (Database::readFile("/mqtt/creds")) {
-        creds.resetContent(Database::payload());
-      }
+      // if (Database::readFile("/mqtt/creds.conf")) {
+      //   creds.resetContent(Database::payload());
+      // }
       creds["id"] = MAC::getMac();
       Configuration::MQTT::registerRoute();
     }
 
     bool isValid() {
+      console.log("validating mqtt", creds);
       return creds.contains("server");
     }
    
   };
-  
+
   namespace Device {
     String toString() {
       JSON json;
@@ -69,6 +77,8 @@ namespace Configuration {
 
     void begin() {
       Configuration::MQTT::begin();
+      Counters::initialize();
+      GPIOs::begin();
     }
   };
 

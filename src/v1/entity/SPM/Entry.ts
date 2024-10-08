@@ -7,20 +7,50 @@ export class SPMEntry {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({
-    length: 10,
-    nullable: false
-  })
-  shift: string;
+  @Column()
+  qr: string;
 
-  @Column({
-    length: 70,
-    nullable: false
-  })
-  data: string;
 
   @Column()
   date: Date;
+
+  @Column()
+  rating: string;
+
+  @Column({
+    type: 'float'
+  })
+  resistance: number;
+
+  @Column({
+  })
+  resistanceStauts: boolean;
+
+  @Column({
+    type: 'float'
+  })
+  hold: number;
+
+  @Column({
+  })
+  holdStauts: boolean;
+
+  @Column({
+    type: 'float'
+  })
+  trip: number;
+
+  @Column({
+  })
+  tripStauts: boolean;
+
+  @Column({
+  })
+  hvStatus: boolean;
+
+  @Column({
+  })
+  overallStatus: boolean;
 
   @ManyToOne(() => SPM, (spm) => spm.entries, {
     orphanedRowAction: 'delete',
@@ -29,13 +59,21 @@ export class SPMEntry {
   })
   spm: SPM;
 
-  constructor(body: SPMEntryInterface) {
+  constructor(body: Partial<SPMEntryInterface>) {
     if (!body) {
       return;
-    }
-    this.shift = body.shift;
-    this.data = body.data;
-    this.date = body.date;
+    }    
+    this.qr = body.qr;
+    this.rating = body.rating;
+    this.resistance = body.resistance;
+    this.resistanceStauts = body.resistanceStauts;
+    this.hold = body.hold;
+    this.holdStauts = body.holdStauts;
+    this.trip = body.trip;
+    this.tripStauts = body.tripStauts;
+    this.hvStatus = body.hvStatus;
+    this.overallStatus = body.overallStatus;
     this.spm = body.spm;
+    this.date = body.date;
   }
 }

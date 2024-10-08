@@ -5,8 +5,9 @@
 #include "utility.h"
 #include "core.h"
 #include "mqtt.h"
+#include "clock.h"
 typedef uint32_t TimeReference;
-namespace Time {
+namespace Timer {
   uint32_t startedAT;
   uint32_t startSeconds;
   struct OffSet {
@@ -29,21 +30,24 @@ namespace Time {
     sscanf(utc.c_str(), "%d:%d:%d", &hours, &minutes, &seconds);
     utc = utc.substring(utc.indexOf('_') + 1);
     sscanf(utc.c_str(), "%d-%d-%d", &year, &month, &day);
-    setTime(hours + Time::offset.hour, minutes + Time::offset.minute, seconds, day, month, year);
+    setTime(hours + Timer::offset.hour, minutes + Timer::offset.minute, seconds, day, month, year);
     startedAT = now();
     startSeconds = millis() / 1000;
-    invoke(syncCallback, getTimeDateStamp());
   }
 
   void onSync(std::function<void(String)> callback) {
-    Time::syncCallback = callback;
+    Timer::syncCallback = callback;
   }
 
   void listenToUTC() {
     console.log("listening to utc");
     wifiMQTT.listen(MAC::getMac() + "/utc", [](String response) {
       console.log("utc", response);
-      Time::sync(response);
+      int previousHours = hour();
+      Timer::sync(response);
+      int currentHours = hour();
+      console.log("hours", previousHours, currentHours);
+      invoke(syncCallback, String(currentHours - previousHours));
     });
   }
 
@@ -53,5 +57,6 @@ namespace Time {
     }
     return timestamp;
   }
+
 };
 #endif

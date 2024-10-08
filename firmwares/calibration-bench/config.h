@@ -8,12 +8,15 @@
 #include "core/Wifi.h"
 #include "core/web-server.h"
 #include "board.h"
-#include "shift.h"
+#include "core/counter.h"
+#include "core/utility/console.h"
+#include "core/clock.h"
 
-#define PRODUCT_NAME               String("CALIBRATION_BENCH")
-#define FIRMWARE_VERSION           String("1.0.0")
-#define DEVICE_TYPE                String("bench-0")
-#define DEVICE_STATION             String("bench-0")
+#define BENCH_ID                   1
+
+#define PRODUCT_NAME               String("CALIB_BENCH")
+#define FIRMWARE_VERSION                  String("1.0.0")
+#define DEVICE_TYPE                String("bench-") + BENCH_ID
 
 namespace Configuration {
   namespace MQTT {
@@ -40,40 +43,44 @@ namespace Configuration {
         return std::make_pair(400, response.toString());
       });
     }
-
-    void begin() {      
-      creds["server"] = "192.168.137.1";
+    void begin() {
+      creds["server"] = "192.168.10.123";
       creds["port"] = 1883;
-      creds["username"] = "tahir";
-      creds["password"] = "AlMustafa@786";
+      creds["username"] = "";
+      creds["password"] = "";
+      // creds["username"] = "vsms";
+      // creds["password"] = "VSMS@123";
       
-      if (!Database::hasFile("/mqtt/creds.conf")) {
-        Database::writeFile("/mqtt/creds.conf", "{}");
+      if (Database::hasFile("/mqtt/creds.conf")) {
+        Database::writeFile("/mqtt/creds.conf", creds.toString());
       }
-      if (Database::readFile("/mqtt/creds.conf")) {
-        creds.resetContent(Database::payload());
-      }
+      // if (Database::readFile("/mqtt/creds.conf")) {
+      //   creds.resetContent(Database::payload());
+      // }
       creds["id"] = MAC::getMac();
       Configuration::MQTT::registerRoute();
     }
 
     bool isValid() {
+      console.log("validating mqtt", creds);
       return creds.contains("server");
     }
    
   };
-  
+
   namespace Device {
     String toString() {
       JSON json;
       json["mac"] = MAC::getMac();
-      json["station"] = DEVICE_TYPE;
+      json["name"] = DEVICE_TYPE;
       json["version"] = FIRMWARE_VERSION;
       return json.toString();
     }
 
     void begin() {
       Configuration::MQTT::begin();
+      Counters::initialize();
+      GPIOs::begin();
     }
   };
 
