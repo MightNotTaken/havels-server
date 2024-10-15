@@ -13,25 +13,27 @@ export class CalibrationBenchController {
     public async initialize() {
         for (let i=1; i<=3; i++) {
             try {
-                const name = `bench-${i}`;
-                const bench = await BenchRepository.findOne({
-                    where: {
-                        name
-                    }
-                });
-                if (!bench) {
-                    await CalibrationBenchController.createBench(name);
-                }
+                // const name = `bench-${i}`;
+                // const bench = await BenchRepository.findOne({
+                //     where: {
+                //         name
+                //     }
+                // });
+                // if (!bench) {
+                //     await CalibrationBenchController.createBench(name);
+                // }
             } catch (error) {
                 console.error();
             }
         }
-        console.log('calibration benches initialized');
+        // console.log('calibration benches initialized');
     }
-    static async createBench(name: string) {
+    static async createBench(data: any) {
         try {
+            const {name, mac} = data;
             const bench = await BenchRepository.create({
-                name
+                name,
+                mac
             });
             await BenchRepository.save(bench);
             for (let i=1; i<=24; i++) {

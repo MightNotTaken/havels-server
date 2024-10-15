@@ -47,11 +47,15 @@ var Entry_1 = require("../entity/SPM/Entry");
 var HourlyStationCount_1 = require("../entity/HourlyStationCount");
 var Bench_1 = require("../entity/calibration-bench/Bench");
 var calibration_bench_controller_1 = require("./calibration-bench.controller");
+var Batch_1 = require("../entity/calibration-bench/Batch");
+var Entry_2 = require("../entity/calibration-bench/Entry");
 var StationRepository = db_1.AppDataSource.getTreeRepository(Station_1.Station);
 var HourlyCountRepository = db_1.AppDataSource.getTreeRepository(HourlyStationCount_1.HourlyCount);
 var SPMRepository = db_1.AppDataSource.getRepository(SPM_1.SPM);
 var SPMEntryRepository = db_1.AppDataSource.getRepository(Entry_1.SPMEntry);
 var CalBenchRepository = db_1.AppDataSource.getRepository(Bench_1.CalibrationBench);
+var BatchRepository = db_1.AppDataSource.getRepository(Batch_1.Batch);
+var PodEntryRepository = db_1.AppDataSource.getRepository(Entry_2.CalibrationPodEntry);
 var MQTTController = /** @class */ (function () {
     function MQTTController() {
         var _this = this;
@@ -249,40 +253,130 @@ var MQTTController = /** @class */ (function () {
             });
         }); });
         mqtt_util_1.default.listen("calib:connect", function (data) { return __awaiter(_this, void 0, void 0, function () {
-            var _a, mac, name, bench, error_5;
-            var _b, _c;
-            return __generator(this, function (_d) {
-                switch (_d.label) {
+            var _a, mac_1, name, bench_1, error_5;
+            var _this = this;
+            var _b;
+            return __generator(this, function (_c) {
+                switch (_c.label) {
                     case 0:
-                        _d.trys.push([0, 3, , 4]);
-                        _a = JSON.parse(data), mac = _a.mac, name = _a.name;
-                        return [4 /*yield*/, CalBenchRepository.findOne({ where: { mac: mac } })];
+                        _c.trys.push([0, 3, , 4]);
+                        _a = JSON.parse(data), mac_1 = _a.mac, name = _a.name;
+                        return [4 /*yield*/, CalBenchRepository.findOne({ where: { mac: mac_1 } })];
                     case 1:
-                        bench = _d.sent();
-                        if (!bench) {
-                            bench = calibration_bench_controller_1.CalibrationBenchController.createBench(name);
+                        bench_1 = _c.sent();
+                        if (!bench_1) {
+                            bench_1 = calibration_bench_controller_1.CalibrationBenchController.createBench({ name: name, mac: mac_1 });
                         }
-                        bench.mac = mac;
-                        return [4 /*yield*/, CalBenchRepository.save(bench)];
+                        bench_1.mac = mac_1;
+                        return [4 /*yield*/, CalBenchRepository.save(bench_1)];
                     case 2:
-                        _d.sent();
-                        (_b = this.client) === null || _b === void 0 ? void 0 : _b.publish("".concat(mac, "/utc"), this.getTime() + '_' + this.getDate());
-                        (_c = this.client) === null || _c === void 0 ? void 0 : _c.publish("".concat(mac, "/bench-id"), bench.id);
+                        _c.sent();
+                        console.log(bench_1);
+                        (_b = this.client) === null || _b === void 0 ? void 0 : _b.publish("".concat(mac_1, "/utc"), this.getTime() + '_' + this.getDate());
+                        setTimeout(function () {
+                            var _a;
+                            (_a = _this.client) === null || _a === void 0 ? void 0 : _a.publish("".concat(mac_1, "/bench-id"), "".concat(bench_1.id));
+                        }, 500);
                         return [3 /*break*/, 4];
                     case 3:
-                        error_5 = _d.sent();
+                        error_5 = _c.sent();
                         return [3 /*break*/, 4];
                     case 4: return [2 /*return*/];
                 }
             });
         }); });
-        mqtt_util_1.default.listen("event", function (data) { return __awaiter(_this, void 0, void 0, function () {
-            return __generator(this, function (_a) {
-                try {
+        mqtt_util_1.default.listen("calib:batch-params", function (rawData) { return __awaiter(_this, void 0, void 0, function () {
+            var _a, mac, mode, rating, current, ambient, t1, t2, t3, t4, batch, error_6;
+            var _b;
+            return __generator(this, function (_c) {
+                switch (_c.label) {
+                    case 0:
+                        _c.trys.push([0, 5, , 6]);
+                        _a = JSON.parse(rawData), mac = _a[0], mode = _a[1], rating = _a[2], current = _a[3], ambient = _a[4], t1 = _a[5], t2 = _a[6], t3 = _a[7], t4 = _a[8];
+                        current = +current;
+                        ambient = +ambient;
+                        t1 = +t1;
+                        t2 = +t2;
+                        t3 = +t3;
+                        t4 = +t4;
+                        console.log({ mac: mac, mode: mode, rating: rating, current: current, ambient: ambient, t1: t1, t2: t2, t3: t3, t4: t4 });
+                        return [4 /*yield*/, BatchRepository.findOne({
+                                where: {
+                                    mode: mode,
+                                    rating: rating,
+                                    current: current,
+                                    ambient: ambient,
+                                    t1: t1,
+                                    t2: t2,
+                                    t3: t3,
+                                    t4: t4
+                                }
+                            })];
+                    case 1:
+                        batch = _c.sent();
+                        if (!!batch) return [3 /*break*/, 4];
+                        return [4 /*yield*/, BatchRepository.create({
+                                mode: mode,
+                                rating: rating,
+                                current: current,
+                                ambient: ambient,
+                                t1: t1,
+                                t2: t2,
+                                t3: t3,
+                                t4: t4
+                            })];
+                    case 2:
+                        batch = _c.sent();
+                        return [4 /*yield*/, BatchRepository.save(batch)];
+                    case 3:
+                        _c.sent();
+                        _c.label = 4;
+                    case 4:
+                        (_b = this.client) === null || _b === void 0 ? void 0 : _b.publish("".concat(mac, "/batch-id"), "".concat(batch.id));
+                        return [3 /*break*/, 6];
+                    case 5:
+                        error_6 = _c.sent();
+                        return [3 /*break*/, 6];
+                    case 6: return [2 /*return*/];
                 }
-                catch (error) {
+            });
+        }); });
+        mqtt_util_1.default.listen("calib:data", function (rawData) { return __awaiter(_this, void 0, void 0, function () {
+            var _a, barcode, batchID, benchID, triptTime, stationID, result, batch, bench, entry, error_7;
+            return __generator(this, function (_b) {
+                switch (_b.label) {
+                    case 0:
+                        _b.trys.push([0, 6, , 7]);
+                        _a = JSON.parse(rawData), barcode = _a[0], batchID = _a[1], benchID = _a[2], triptTime = _a[3], stationID = _a[4], result = _a[5];
+                        console.log({ batchID: batchID, benchID: benchID, triptTime: triptTime, stationID: stationID, result: result });
+                        result = ['MCB_PASS', 'MCB_EARLY_TRIP', 'MCB_LATE_TRIP', 'MCB_NO_TRIP', 'MCB_INVALID_RESPONSE'][result];
+                        return [4 /*yield*/, BatchRepository.findOne({ where: { id: +batchID } })];
+                    case 1:
+                        batch = _b.sent();
+                        return [4 /*yield*/, CalBenchRepository.findOne({ where: { id: +benchID }, relations: ['pods'] })];
+                    case 2:
+                        bench = _b.sent();
+                        if (!(batch && bench.pods[stationID - 1])) return [3 /*break*/, 5];
+                        return [4 /*yield*/, PodEntryRepository.create({
+                                barcode: barcode,
+                                tripTime: +triptTime,
+                                result: result,
+                                pod: bench.pods[stationID - 1],
+                                batch: batch
+                            })];
+                    case 3:
+                        entry = _b.sent();
+                        return [4 /*yield*/, PodEntryRepository.save(entry)];
+                    case 4:
+                        _b.sent();
+                        console.log(entry);
+                        _b.label = 5;
+                    case 5: return [3 /*break*/, 7];
+                    case 6:
+                        error_7 = _b.sent();
+                        return [3 /*break*/, 7];
+                    case 7: return [2 /*return*/];
                 }
-                return [2 /*return*/];
             });
         }); });
     };

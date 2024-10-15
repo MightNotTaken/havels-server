@@ -30,7 +30,7 @@ var CalibrationPodEntry = /** @class */ (function () {
     ], CalibrationPodEntry.prototype, "id", void 0);
     __decorate([
         (0, typeorm_1.Column)({
-            nullable: false
+            nullable: true
         }),
         __metadata("design:type", String)
     ], CalibrationPodEntry.prototype, "barcode", void 0);
@@ -44,7 +44,7 @@ var CalibrationPodEntry = /** @class */ (function () {
         (0, typeorm_1.Column)({
             nullable: false
         }),
-        __metadata("design:type", Boolean)
+        __metadata("design:type", String)
     ], CalibrationPodEntry.prototype, "result", void 0);
     __decorate([
         (0, typeorm_1.ManyToOne)(function () { return Pod_1.CalibrationPod; }, function (pod) { return pod.entries; }, {

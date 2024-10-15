@@ -6,6 +6,6 @@ export interface CalibrationPodEntryInterface {
     date: Date;
     pod: CalibrationPod;
     batch: Batch;
-    result: boolean;
+    result: 'MCB_PASS'|'MCB_EARLY_TRIP'|'MCB_LATE_TRIP'|'MCB_NO_TRIP'|'MCB_INVALID_RESPONSE';
     tripTime: number;
 }

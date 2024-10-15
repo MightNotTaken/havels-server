@@ -5,6 +5,8 @@
 #include "core/JSON.h"
 #include <vector>
 #include "core/mac.h"
+#include "core/mqtt.h"
+
 enum MCBResult {
     MCB_PASS              = 1,
     MCB_EARLY_TRIP        = 2,
@@ -26,7 +28,13 @@ class ProductionParameters {
     int t2;
     int t3;
     int t4;
+    bool valid;
+    int32_t batchID;
 public:
+    ProductionParameters() {
+        valid = false;
+        batchID = -1;
+    }
     void update(
         Mode mode,
         String rating,
@@ -37,6 +45,7 @@ public:
         int t3,
         int t4
     ) {
+        this->valid = true;
         this->mode    = mode;
         this->rating  = rating;
         this->current = current;
@@ -45,6 +54,14 @@ public:
         this->t2      = t2;
         this->t3      = t3;
         this->t4      = t4;
+    }
+
+    bool isValid() {
+        return valid;
+    }
+
+    int getBatchID() {
+        return this->batchID;
     }
 
     bool same(
@@ -80,6 +97,10 @@ public:
         json.push_back(this->t4);
         return json.toString();        
     }
+
+    void setBatchID(int id) {
+        this->batchID = id;
+    }
 } productionParams;
 
 class DataSource_T {
@@ -88,11 +109,13 @@ class DataSource_T {
     MCBResult result;
     static int count;
     int benchID;
+    String barcode;
 public:
     DataSource_T() {
         DataSource_T::count++;
         this->stationID = DataSource_T::count;
         this->flush();
+        benchID = -1;
     }
 
     void setTripTime(float time) {
@@ -112,15 +135,20 @@ public:
         return tripTime != -1 && result != MCBResult::MCB_INVALID_RESPONSE;
     }
 
-    String toString() {
-        JSON response;
-        // response["mac"] = MAC::getMac();
-        response["trip"] = tripTime;
-        response["station"] = stationID;
-        response["result"] = result;
-        return response.toString();
+    void setID(int id) {
+        benchID = id;
     }
 
+    String toString() {
+        JSON response("[]");
+        response.push_back(barcode);
+        response.push_back(productionParams.getBatchID());
+        response.push_back(benchID);
+        response.push_back(tripTime);
+        response.push_back(stationID);
+        response.push_back(int(result));
+        return response.toString();
+    }
 };
 
 int DataSource_T::count = 0;
@@ -150,6 +178,16 @@ namespace DataSource {
         }, 100);
     }
 
+    void setBenchID(int id) {
+        for (int i=0; i<24; i++) {
+            benches[i].setID(id);
+        }
+    }
+
+    void setBatchID(int id) {
+        productionParams.setBatchID(id);
+    }
+
     void split() {
         segments.clear();
         segments.shrink_to_fit();
@@ -176,19 +214,25 @@ namespace DataSource {
             int t2 = segments[5].toInt();
             int t3 = segments[6].toInt();
             int t4 = segments[7].toInt();
-            if (!productionParams.same(mode, rating, current, ambient, t1, t2, t3, t4)) {
+            int timeout = 0;
+            if (productionParams.getBatchID() == -1 || !productionParams.same(mode, rating, current, ambient, t1, t2, t3, t4)) {
                 productionParams.update(mode, rating, current, ambient, t1, t2, t3, t4);
+                wifiMQTT.emit("calib:batch-params", productionParams.toString());
+                timeout = 1000;
             }
-            for (int i=0; i<12; i++) {
-                int stationID = segments[8 + i*3 + 0].toInt() - 1;
-                float tripTime = segments[8 + i*3 + 1].toFloat();
-                MCBResult result = (MCBResult)segments[8 + i*3 + 2].toInt();
-                if (stationID <= 24) {
-                    DataSource::benches[stationID].setResult(result);
-                    DataSource::benches[stationID].setTripTime(tripTime);
-                    console.log(DataSource::benches[i]);
+            setTimeout([]() {
+                for (int i=0; i<12; i++) {
+                    int stationID = segments[8 + i*3 + 0].toInt() - 1;
+                    float tripTime = segments[8 + i*3 + 1].toFloat();
+                    MCBResult result = (MCBResult)segments[8 + i*3 + 2].toInt();
+                    if (stationID <= 24) {
+                        DataSource::benches[stationID].setResult(result);
+                        DataSource::benches[stationID].setTripTime(tripTime);
+                        console.log(DataSource::benches[i]);
+                        wifiMQTT.emit("calib:data", DataSource::benches[i].toString());
+                    }
                 }
-            }
+            }, timeout);
         }
     }
 };

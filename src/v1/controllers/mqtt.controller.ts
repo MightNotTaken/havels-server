@@ -1,4 +1,4 @@
-import { Console } from "console";
+import { Console, profileEnd } from "console";
 import { AppDataSource } from "../../db";
 import MQTTService from "../utils/mqtt.util";
 
@@ -9,6 +9,8 @@ import { SPMEntry } from "../entity/SPM/Entry";
 import { HourlyCount } from "../entity/HourlyStationCount";
 import { CalibrationBench } from "../entity/calibration-bench/Bench";
 import calibrationBenchController, { CalibrationBenchController } from "./calibration-bench.controller";
+import { Batch } from "../entity/calibration-bench/Batch";
+import { CalibrationPodEntry } from "../entity/calibration-bench/Entry";
 
 
 const StationRepository = AppDataSource.getTreeRepository(Station);
@@ -16,6 +18,9 @@ const HourlyCountRepository = AppDataSource.getTreeRepository(HourlyCount);
 const SPMRepository = AppDataSource.getRepository(SPM);
 const SPMEntryRepository = AppDataSource.getRepository(SPMEntry);
 const CalBenchRepository = AppDataSource.getRepository(CalibrationBench);
+const BatchRepository = AppDataSource.getRepository(Batch);
+const PodEntryRepository = AppDataSource.getRepository(CalibrationPodEntry);
+
 
 class MQTTController {
     client: MqttClient = null;
@@ -133,20 +138,63 @@ class MQTTController {
                 const {mac, name} = JSON.parse(data);
                 let bench: any = await CalBenchRepository.findOne({where: {mac}});
                 if (!bench) {
-                    bench = CalibrationBenchController.createBench(name);
+                    bench = CalibrationBenchController.createBench({name, mac});
                 }
                 bench.mac = mac;
                 await CalBenchRepository.save(bench);
-
+                console.log(bench);
                 this.client?.publish(`${mac}/utc`, this.getTime() + '_' + this.getDate());
-                this.client?.publish(`${mac}/bench-id`, bench.id);
+                setTimeout(()=>{
+                    this.client?.publish(`${mac}/bench-id`, `${bench.id}`);
+                }, 500);
             } catch (error) {
 
             }
         });
-        MQTTService.listen("event", async (data) => {
+        MQTTService.listen("calib:batch-params", async (rawData) => {
             try {
+                let [ mac, mode, rating, current, ambient, t1, t2, t3, t4] = JSON.parse(rawData);
+                current = +current;
+                ambient = +ambient;
+                t1 = +t1;
+                t2 = +t2;
+                t3 = +t3;
+                t4 = +t4;
+                console.log({mac, mode, rating, current, ambient, t1, t2, t3, t4})
+                let batch = await BatchRepository.findOne({
+                    where: {
+                        mode, rating, current, ambient, t1, t2, t3, t4
+                    }
+                });
+                if (!batch) {
+                    batch = await BatchRepository.create({
+                        mode, rating, current, ambient, t1, t2, t3, t4
+                    });
+                    await BatchRepository.save(batch);
+                }
+                this.client?.publish(`${mac}/batch-id`, `${batch.id}`);
+            } catch (error) {
 
+            }
+        });
+        MQTTService.listen("calib:data", async (rawData) => {
+            try {
+                let [barcode, batchID, benchID, triptTime, stationID, result] = JSON.parse(rawData);
+                console.log({batchID, benchID, triptTime, stationID, result});
+                result = ['MCB_PASS', 'MCB_EARLY_TRIP', 'MCB_LATE_TRIP', 'MCB_NO_TRIP', 'MCB_INVALID_RESPONSE'][result];
+                const batch = await BatchRepository.findOne({where: {id: +batchID}});
+                const bench = await CalBenchRepository.findOne({where: {id: +benchID}, relations: ['pods']});
+                if (batch && bench.pods[stationID - 1]) {
+                    const entry = await PodEntryRepository.create({
+                        barcode, 
+                        tripTime: +triptTime,
+                        result,
+                        pod: bench.pods[stationID - 1],
+                        batch
+                    });
+                    await PodEntryRepository.save(entry);
+                    console.log(entry);
+                }
             } catch (error) {
 
             }

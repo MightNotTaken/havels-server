@@ -49,54 +49,39 @@ var CalibrationBenchController = /** @class */ (function () {
     }
     CalibrationBenchController.prototype.initialize = function () {
         return __awaiter(this, void 0, void 0, function () {
-            var i, name, bench, error_1;
+            var i;
             return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0:
-                        i = 1;
-                        _a.label = 1;
-                    case 1:
-                        if (!(i <= 3)) return [3 /*break*/, 8];
-                        _a.label = 2;
-                    case 2:
-                        _a.trys.push([2, 6, , 7]);
-                        name = "bench-".concat(i);
-                        return [4 /*yield*/, BenchRepository.findOne({
-                                where: {
-                                    name: name
-                                }
-                            })];
-                    case 3:
-                        bench = _a.sent();
-                        if (!!bench) return [3 /*break*/, 5];
-                        return [4 /*yield*/, CalibrationBenchController.createBench(name)];
-                    case 4:
-                        _a.sent();
-                        _a.label = 5;
-                    case 5: return [3 /*break*/, 7];
-                    case 6:
-                        error_1 = _a.sent();
+                for (i = 1; i <= 3; i++) {
+                    try {
+                        // const name = `bench-${i}`;
+                        // const bench = await BenchRepository.findOne({
+                        //     where: {
+                        //         name
+                        //     }
+                        // });
+                        // if (!bench) {
+                        //     await CalibrationBenchController.createBench(name);
+                        // }
+                    }
+                    catch (error) {
                         console.error();
-                        return [3 /*break*/, 7];
-                    case 7:
-                        i++;
-                        return [3 /*break*/, 1];
-                    case 8:
-                        console.log('calibration benches initialized');
-                        return [2 /*return*/];
+                    }
                 }
+                return [2 /*return*/];
             });
         });
     };
-    CalibrationBenchController.createBench = function (name) {
+    CalibrationBenchController.createBench = function (data) {
         return __awaiter(this, void 0, void 0, function () {
-            var bench, i, pod, error_2;
+            var name, mac, bench, i, pod, error_1;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
                         _a.trys.push([0, 9, , 10]);
+                        name = data.name, mac = data.mac;
                         return [4 /*yield*/, BenchRepository.create({
-                                name: name
+                                name: name,
+                                mac: mac
                             })];
                     case 1:
                         bench = _a.sent();
@@ -129,8 +114,8 @@ var CalibrationBenchController = /** @class */ (function () {
                         })];
                     case 8: return [2 /*return*/, _a.sent()];
                     case 9:
-                        error_2 = _a.sent();
-                        console.error(error_2);
+                        error_1 = _a.sent();
+                        console.error(error_1);
                         return [2 /*return*/, null];
                     case 10: return [2 /*return*/];
                 }

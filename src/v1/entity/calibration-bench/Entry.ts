@@ -5,7 +5,6 @@ import {
   PrimaryGeneratedColumn, 
   JoinColumn 
 } from "typeorm";
-import { CalibrationBench } from "./Bench";
 import { CalibrationPod } from "./Pod";
 import { CalibrationPodEntryInterface } from "../../interfaces/calibration-bench/entry";
 import { Batch } from "./Batch";  
@@ -16,7 +15,7 @@ export class CalibrationPodEntry {
   id: number;
 
   @Column({
-    nullable: false
+    nullable: true
   })
   barcode: string;
 
@@ -28,7 +27,7 @@ export class CalibrationPodEntry {
   @Column({
     nullable: false
   })
-  result: boolean;
+  result: 'MCB_PASS'|'MCB_EARLY_TRIP'|'MCB_LATE_TRIP'|'MCB_NO_TRIP'|'MCB_INVALID_RESPONSE';
 
   @ManyToOne(() => CalibrationPod, (pod) => pod.entries, {
     orphanedRowAction: 'delete',

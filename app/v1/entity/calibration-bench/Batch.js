@@ -19,12 +19,11 @@ var Batch = /** @class */ (function () {
         }
         this.mode = body.mode;
         this.current = body.current;
-        this.ambientTemperature = body.ambientTemperature;
+        this.ambient = body.ambient;
         this.t1 = body.t1;
         this.t2 = body.t2;
         this.t3 = body.t3;
         this.t4 = body.t4;
-        this.mac = body.mac;
     }
     __decorate([
         (0, typeorm_1.PrimaryGeneratedColumn)(),
@@ -39,13 +38,17 @@ var Batch = /** @class */ (function () {
         __metadata("design:type", String)
     ], Batch.prototype, "mode", void 0);
     __decorate([
+        (0, typeorm_1.Column)({ nullable: false }),
+        __metadata("design:type", String)
+    ], Batch.prototype, "rating", void 0);
+    __decorate([
         (0, typeorm_1.Column)({ type: "float", nullable: false }),
         __metadata("design:type", Number)
     ], Batch.prototype, "current", void 0);
     __decorate([
         (0, typeorm_1.Column)({ type: "float", nullable: false }),
         __metadata("design:type", Number)
-    ], Batch.prototype, "ambientTemperature", void 0);
+    ], Batch.prototype, "ambient", void 0);
     __decorate([
         (0, typeorm_1.Column)({ type: "float", nullable: false }),
         __metadata("design:type", Number)
@@ -62,10 +65,6 @@ var Batch = /** @class */ (function () {
         (0, typeorm_1.Column)({ type: "float", nullable: false }),
         __metadata("design:type", Number)
     ], Batch.prototype, "t4", void 0);
-    __decorate([
-        (0, typeorm_1.Column)({ nullable: false }),
-        __metadata("design:type", String)
-    ], Batch.prototype, "mac", void 0);
     Batch = __decorate([
         (0, typeorm_1.Entity)(),
         __metadata("design:paramtypes", [Object])

@@ -109,20 +109,20 @@ Wifi_T::Wifi_T() {
 }
 
 void Wifi_T::begin(const JSON& defaultContent) {
-  if (!Database::hasFile("/_wifi.conf")) {
-    Database::writeFile("/_wifi.conf", defaultContent.toString());
-  }
-  if (Database::readFile("/_wifi.conf")) {
-    console.log("Credentials loaded from database", Database::payload());
-    if (JSON::isJSON(Database::payload())) {
-      this->resetContent(Database::payload());
-    } else {
-      Database::writeFile("/_wifi.conf", defaultContent.toString());
-      this->resetContent(defaultContent.toString());
-    }
-  } else {
+  // if (Database::hasFile("/_wifi.conf")) {
+  //   Database::writeFile("/_wifi.conf", defaultContent.toString());
+  // }
+  // if (Database::readFile("/_wifi.conf")) {
+  //   console.log("Credentials loaded from database", Database::payload());
+  //   if (JSON::isJSON(Database::payload())) {
+  //     this->resetContent(Database::payload());
+  //   } else {
+  //     Database::writeFile("/_wifi.conf", defaultContent.toString());
+  //     this->resetContent(defaultContent.toString());
+  //   }
+  // } else {
     this->resetContent(defaultContent.toString());
-  }
+  // }
   if (this->size()) {
     int index = 0;
     auto lastConnected = this->map([&index](JSON wifi) {

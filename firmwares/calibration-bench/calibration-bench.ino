@@ -70,7 +70,15 @@ void setupMQTT() {
       Counters::resetAll();
     });
     wifiMQTT.listen(MAC::getMac() + "/bench-id", [](String id) {
-
+      console.log("setting bench id to:", id);
+      DataSource::setBenchID(id.toInt());
+      if (productionParams.getBatchID() != -1) {
+        wifiMQTT.emit("calib:batch-params", productionParams.toString());
+      }
+    });
+    wifiMQTT.listen(MAC::getMac() + "/batch-id", [](String id) {
+      console.log("setting batch id to:", id);
+      DataSource::setBatchID(id.toInt());
     });
     connectionTracker = setImmediate([]() {
       wifiMQTT.emit("calib:connect", Configuration::Device::toString());
