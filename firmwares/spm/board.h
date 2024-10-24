@@ -1,6 +1,6 @@
 #ifndef BOARD_H__
 #define BOARD_H__
-#define PULSE_SOURCE_0               19
-#define PULSE_SOURCE_1               21
-#define PULSE_SOURCE_2               22
+#define RX_PIN           5
+#define TX_PIN           12
+#define DIRECTION_PIN    13
 #endif

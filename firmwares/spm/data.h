@@ -9,12 +9,8 @@
 #include <functional>
 #include "core/mac.h"
 #include <Arduino.h>
+#include "board.h"
 
-
-#define RX_PIN      35
-#define TX_PIN      34
-
-SoftwareSerial serialA(RX_PIN, TX_PIN);
 class DataSource_T {
     int id;
     String Rating;
@@ -70,6 +66,7 @@ public:
 
 DataSource_T dataSource;
 
+SoftwareSerial serialA(RX_PIN, TX_PIN);
 namespace DataSource {
     String data = "";
 
@@ -80,21 +77,25 @@ namespace DataSource {
     }
 
     void begin() {
+        pinMode(DIRECTION_PIN, OUTPUT);
+        digitalWrite(DIRECTION_PIN, LOW);
         serialA.begin(9600);
         setInterval([]() {
             while (serialA.available()) {
+                delay(2);
                 char ch = serialA.read();
-                if (ch == '\r') {
-                    continue;
-                }
-                if (ch == '\n') {
-                    dataSource.parse(data);
-                    data = "";
-                    dataCallback(dataSource.toString());
-                    continue;
-                }
                 data += ch;
             }
+            
+            if (data.indexOf("RAT") > -1 && !data.startsWith("RAT")) {
+                data = data.substring(data.indexOf("RAT"));
+            }
+            if (data.indexOf("OVER") > -1) {
+                data.replace(" ", "");
+                dataSource.parse(data);
+                data = "";
+                dataCallback(dataSource.toString());
+            }            
         }, 100);
     }
 };

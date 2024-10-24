@@ -15,7 +15,7 @@
 #define BENCH_ID                   1
 
 #define PRODUCT_NAME               String("CALIB_BENCH")
-#define FIRMWARE_VERSION                  String("1.0.0")
+#define FIRMWARE_VERSION           String("1.0.0")
 #define DEVICE_TYPE                String("bench-") + BENCH_ID
 
 namespace Configuration {
