@@ -6,6 +6,7 @@
 #include <vector>
 #include "core/mac.h"
 #include "core/mqtt.h"
+#include <SoftwareSerial.h>
 
 enum MCBResult {
     MCB_PASS              = 1,
@@ -153,6 +154,8 @@ public:
 
 int DataSource_T::count = 0;
 
+SoftwareSerial SerialA(34, 35);
+
 namespace DataSource {
     String data;
     DataSource_T benches[24];
@@ -160,10 +163,12 @@ namespace DataSource {
     void split();
     void parse();
     void begin() {
+        SerialA.begin(9600);
         setInterval([]() {
-            while (Serial.available()) {
+            while (SerialA.available()) {
                 delay(1);
-                char ch = Serial.read();
+                char ch = SerialA.read();
+                Serial.write(ch);
                 if (ch == '*') {
                     data = "";
                     continue;
