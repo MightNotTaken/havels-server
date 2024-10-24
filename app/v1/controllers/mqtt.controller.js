@@ -323,7 +323,8 @@ var MQTTController = /** @class */ (function () {
                                 t1: t1,
                                 t2: t2,
                                 t3: t3,
-                                t4: t4
+                                t4: t4,
+                                timestamp: new Date()
                             })];
                     case 2:
                         batch = _c.sent();
@@ -349,7 +350,7 @@ var MQTTController = /** @class */ (function () {
                         _b.trys.push([0, 6, , 7]);
                         _a = JSON.parse(rawData), barcode = _a[0], batchID = _a[1], benchID = _a[2], triptTime = _a[3], stationID = _a[4], result = _a[5];
                         console.log({ batchID: batchID, benchID: benchID, triptTime: triptTime, stationID: stationID, result: result });
-                        result = ['MCB_PASS', 'MCB_EARLY_TRIP', 'MCB_LATE_TRIP', 'MCB_NO_TRIP'][result];
+                        result = [null, 'MCB_PASS', 'MCB_EARLY_TRIP', 'MCB_LATE_TRIP', 'MCB_NO_TRIP'][result];
                         return [4 /*yield*/, BatchRepository.findOne({ where: { id: +batchID } })];
                     case 1:
                         batch = _b.sent();

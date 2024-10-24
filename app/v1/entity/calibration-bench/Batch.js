@@ -65,6 +65,10 @@ var Batch = /** @class */ (function () {
         (0, typeorm_1.Column)({ type: "float", nullable: false }),
         __metadata("design:type", Number)
     ], Batch.prototype, "t4", void 0);
+    __decorate([
+        (0, typeorm_1.Column)({ nullable: true }),
+        __metadata("design:type", Date)
+    ], Batch.prototype, "timestamp", void 0);
     Batch = __decorate([
         (0, typeorm_1.Entity)(),
         __metadata("design:paramtypes", [Object])

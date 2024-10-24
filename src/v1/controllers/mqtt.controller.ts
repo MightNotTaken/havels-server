@@ -168,7 +168,8 @@ class MQTTController {
                 });
                 if (!batch) {
                     batch = await BatchRepository.create({
-                        mode, rating, current, ambient, t1, t2, t3, t4
+                        mode, rating, current, ambient, t1, t2, t3, t4,
+                        timestamp: new Date()
                     });
                     await BatchRepository.save(batch);
                 }
@@ -181,7 +182,7 @@ class MQTTController {
             try {
                 let [barcode, batchID, benchID, triptTime, stationID, result] = JSON.parse(rawData);
                 console.log({batchID, benchID, triptTime, stationID, result});
-                result = ['MCB_PASS', 'MCB_EARLY_TRIP', 'MCB_LATE_TRIP', 'MCB_NO_TRIP'][result];
+                result = [null, 'MCB_PASS', 'MCB_EARLY_TRIP', 'MCB_LATE_TRIP', 'MCB_NO_TRIP'][result];
                 const batch = await BatchRepository.findOne({where: {id: +batchID}});
                 const bench = await CalBenchRepository.findOne({where: {id: +benchID}, relations: ['pods']});
                 if (batch && bench.pods[stationID - 1]) {
