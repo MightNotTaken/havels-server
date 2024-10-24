@@ -25,9 +25,14 @@ export class CalibrationPodEntry {
   tripTime: number;
 
   @Column({
-    nullable: false
+    nullable: true
   })
-  result: 'MCB_PASS'|'MCB_EARLY_TRIP'|'MCB_LATE_TRIP'|'MCB_NO_TRIP'|'MCB_INVALID_RESPONSE';
+  timestamp: Date;
+
+  @Column({
+    nullable: true
+  })
+  result: 'MCB_PASS'|'MCB_EARLY_TRIP'|'MCB_LATE_TRIP'|'MCB_NO_TRIP';
 
   @ManyToOne(() => CalibrationPod, (pod) => pod.entries, {
     orphanedRowAction: 'delete',
@@ -54,5 +59,6 @@ export class CalibrationPodEntry {
     this.result = body.result;
     this.tripTime = body.tripTime;
     this.batch = body.batch;  
+    this.timestamp = body.timestamp;  
   }
 }

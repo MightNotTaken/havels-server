@@ -23,6 +23,7 @@ var CalibrationPodEntry = /** @class */ (function () {
         this.result = body.result;
         this.tripTime = body.tripTime;
         this.batch = body.batch;
+        this.timestamp = body.timestamp;
     }
     __decorate([
         (0, typeorm_1.PrimaryGeneratedColumn)(),
@@ -42,7 +43,13 @@ var CalibrationPodEntry = /** @class */ (function () {
     ], CalibrationPodEntry.prototype, "tripTime", void 0);
     __decorate([
         (0, typeorm_1.Column)({
-            nullable: false
+            nullable: true
+        }),
+        __metadata("design:type", Date)
+    ], CalibrationPodEntry.prototype, "timestamp", void 0);
+    __decorate([
+        (0, typeorm_1.Column)({
+            nullable: true
         }),
         __metadata("design:type", String)
     ], CalibrationPodEntry.prototype, "result", void 0);

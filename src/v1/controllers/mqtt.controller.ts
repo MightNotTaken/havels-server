@@ -181,7 +181,7 @@ class MQTTController {
             try {
                 let [barcode, batchID, benchID, triptTime, stationID, result] = JSON.parse(rawData);
                 console.log({batchID, benchID, triptTime, stationID, result});
-                result = ['MCB_PASS', 'MCB_EARLY_TRIP', 'MCB_LATE_TRIP', 'MCB_NO_TRIP', 'MCB_INVALID_RESPONSE'][result];
+                result = ['MCB_PASS', 'MCB_EARLY_TRIP', 'MCB_LATE_TRIP', 'MCB_NO_TRIP'][result];
                 const batch = await BatchRepository.findOne({where: {id: +batchID}});
                 const bench = await CalBenchRepository.findOne({where: {id: +benchID}, relations: ['pods']});
                 if (batch && bench.pods[stationID - 1]) {
@@ -190,7 +190,8 @@ class MQTTController {
                         tripTime: +triptTime,
                         result,
                         pod: bench.pods[stationID - 1],
-                        batch
+                        batch,
+                        timestamp: new Date()
                     });
                     await PodEntryRepository.save(entry);
                     console.log(entry);

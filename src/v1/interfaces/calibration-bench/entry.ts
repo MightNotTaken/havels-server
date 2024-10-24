@@ -5,7 +5,8 @@ export interface CalibrationPodEntryInterface {
     barcode: string;
     date: Date;
     pod: CalibrationPod;
+    timestamp: Date;
     batch: Batch;
-    result: 'MCB_PASS'|'MCB_EARLY_TRIP'|'MCB_LATE_TRIP'|'MCB_NO_TRIP'|'MCB_INVALID_RESPONSE';
+    result: 'MCB_PASS'|'MCB_EARLY_TRIP'|'MCB_LATE_TRIP'|'MCB_NO_TRIP';
     tripTime: number;
 }
