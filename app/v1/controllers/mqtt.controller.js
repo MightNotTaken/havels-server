@@ -69,46 +69,22 @@ var MQTTController = /** @class */ (function () {
     MQTTController.prototype.registerDeviceEvents = function () {
         var _this = this;
         mqtt_util_1.default.listen('connect', function (data) { return __awaiter(_this, void 0, void 0, function () {
-            var _a, mac, station, stationData, error_1;
+            var _a, mac, station;
             var _b;
             return __generator(this, function (_c) {
-                switch (_c.label) {
-                    case 0:
-                        _c.trys.push([0, 5, , 6]);
-                        _a = JSON.parse(data), mac = _a.mac, station = _a.station;
-                        console.log('connection', { mac: mac, station: station });
-                        return [4 /*yield*/, StationRepository.findOne({
-                                where: {
-                                    name: station
-                                }
-                            })];
-                    case 1:
-                        stationData = _c.sent();
-                        console.log(stationData);
-                        if (!!stationData) return [3 /*break*/, 4];
-                        return [4 /*yield*/, StationRepository.create({
-                                name: station,
-                                mac: mac
-                            })];
-                    case 2:
-                        stationData = _c.sent();
-                        return [4 /*yield*/, StationRepository.save(stationData)];
-                    case 3:
-                        _c.sent();
-                        _c.label = 4;
-                    case 4:
-                        (_b = this.client) === null || _b === void 0 ? void 0 : _b.publish("".concat(mac, "/utc"), this.getTime() + '_' + this.getDate());
-                        return [3 /*break*/, 6];
-                    case 5:
-                        error_1 = _c.sent();
-                        console.error(error_1);
-                        return [3 /*break*/, 6];
-                    case 6: return [2 /*return*/];
+                try {
+                    _a = JSON.parse(data), mac = _a.mac, station = _a.station;
+                    console.log('connection', { mac: mac, station: station });
+                    (_b = this.client) === null || _b === void 0 ? void 0 : _b.publish("".concat(mac, "/utc"), this.getTime() + '_' + this.getDate());
                 }
+                catch (error) {
+                    console.error(error);
+                }
+                return [2 /*return*/];
             });
         }); });
         mqtt_util_1.default.listen("spm:connect", function (data) { return __awaiter(_this, void 0, void 0, function () {
-            var _a, mac, station, spm, error_2;
+            var _a, mac, station, spm, error_1;
             var _b, _c;
             return __generator(this, function (_d) {
                 switch (_d.label) {
@@ -137,15 +113,15 @@ var MQTTController = /** @class */ (function () {
                         (_c = this.client) === null || _c === void 0 ? void 0 : _c.publish("".concat(mac, "/utc"), this.getTime() + '_' + this.getDate());
                         return [3 /*break*/, 8];
                     case 7:
-                        error_2 = _d.sent();
-                        console.error(error_2);
+                        error_1 = _d.sent();
+                        console.error(error_1);
                         return [3 /*break*/, 8];
                     case 8: return [2 /*return*/];
                 }
             });
         }); });
         mqtt_util_1.default.listen("spm:data", function (data) { return __awaiter(_this, void 0, void 0, function () {
-            var _a, id, qr, rating, resistance, resistanceStauts, hold, holdStauts, trip, tripStauts, hvStatus, overallStatus, spm, entry, error_3;
+            var _a, id, qr, rating, resistance, resistanceStauts, hold, holdStauts, trip, tripStauts, hvStatus, overallStatus, spm, entry, error_2;
             return __generator(this, function (_b) {
                 switch (_b.label) {
                     case 0:
@@ -178,15 +154,15 @@ var MQTTController = /** @class */ (function () {
                         _b.label = 4;
                     case 4: return [3 /*break*/, 6];
                     case 5:
-                        error_3 = _b.sent();
-                        console.error(error_3);
+                        error_2 = _b.sent();
+                        console.error(error_2);
                         return [3 /*break*/, 6];
                     case 6: return [2 /*return*/];
                 }
             });
         }); });
         mqtt_util_1.default.listen("hourly-station-count", function (data) { return __awaiter(_this, void 0, void 0, function () {
-            var _a, hour, stationName, count, mac, station, date, hourlyCount, error_4;
+            var _a, hour, stationName, count, mac, station, date, hourlyCount, error_3;
             return __generator(this, function (_b) {
                 switch (_b.label) {
                     case 0:
@@ -245,15 +221,15 @@ var MQTTController = /** @class */ (function () {
                         _b.sent();
                         return [3 /*break*/, 11];
                     case 10:
-                        error_4 = _b.sent();
-                        console.error(error_4);
+                        error_3 = _b.sent();
+                        console.error(error_3);
                         return [3 /*break*/, 11];
                     case 11: return [2 /*return*/];
                 }
             });
         }); });
         mqtt_util_1.default.listen("calib:connect", function (data) { return __awaiter(_this, void 0, void 0, function () {
-            var _a, mac_1, name, bench_1, error_5;
+            var _a, mac_1, name, bench_1, error_4;
             var _this = this;
             var _b;
             return __generator(this, function (_c) {
@@ -279,14 +255,14 @@ var MQTTController = /** @class */ (function () {
                         }, 500);
                         return [3 /*break*/, 4];
                     case 3:
-                        error_5 = _c.sent();
+                        error_4 = _c.sent();
                         return [3 /*break*/, 4];
                     case 4: return [2 /*return*/];
                 }
             });
         }); });
         mqtt_util_1.default.listen("calib:batch-params", function (rawData) { return __awaiter(_this, void 0, void 0, function () {
-            var _a, mac, mode, rating, current, ambient, t1, t2, t3, t4, batch, error_6;
+            var _a, mac, mode, rating, current, ambient, t1, t2, t3, t4, batch, error_5;
             var _b;
             return __generator(this, function (_c) {
                 switch (_c.label) {
@@ -336,14 +312,14 @@ var MQTTController = /** @class */ (function () {
                         (_b = this.client) === null || _b === void 0 ? void 0 : _b.publish("".concat(mac, "/batch-id"), "".concat(batch.id));
                         return [3 /*break*/, 6];
                     case 5:
-                        error_6 = _c.sent();
+                        error_5 = _c.sent();
                         return [3 /*break*/, 6];
                     case 6: return [2 /*return*/];
                 }
             });
         }); });
         mqtt_util_1.default.listen("calib:data", function (rawData) { return __awaiter(_this, void 0, void 0, function () {
-            var _a, barcode, batchID, benchID, triptTime, stationID, result, batch, bench, entry, error_7;
+            var _a, barcode, batchID, benchID, triptTime, stationID, result, batch, bench, entry, error_6;
             return __generator(this, function (_b) {
                 switch (_b.label) {
                     case 0:
@@ -375,7 +351,7 @@ var MQTTController = /** @class */ (function () {
                         _b.label = 5;
                     case 5: return [3 /*break*/, 7];
                     case 6:
-                        error_7 = _b.sent();
+                        error_6 = _b.sent();
                         return [3 /*break*/, 7];
                     case 7: return [2 /*return*/];
                 }

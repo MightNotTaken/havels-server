@@ -70,33 +70,34 @@ namespace Configuration {
   namespace Device {
     std::vector<PulseCounter*> pulseCounterList;
     std::vector<std::pair<String, int>> pulseReaders = {
-      {"station-12", PULSE_SOURCE_0},
-      {"station-13", PULSE_SOURCE_1},
-      {"station-14", PULSE_SOURCE_2},
-      // {"station-4", PULSE_SOURCE_0},
+      {"station-1", PULSE_SOURCE_0},
+      {"station-2", PULSE_SOURCE_1},
+      {"station-3", PULSE_SOURCE_2},
+      {"station-4", PULSE_SOURCE_3},
       // {"station-5", PULSE_SOURCE_0}
     };
     String toString() {
       JSON json;
       json["mac"] = MAC::getMac();
-      json["station"] = DEVICE_TYPE;
-      json["version"] = FIRMWARE_VERSION;
       return json.toString();
     }
 
     void begin() {
-      Configuration::MQTT::begin();
-      Counters::initialize();
-      for (auto [station, gpio]: pulseReaders) {
-        PulseCounter* counter = new PulseCounter(station, gpio);
-        pulseCounterList.push_back(counter);
-        counter->on("data", [](String response) {
-          if (WiFi.status() == WL_CONNECTED) {
-            wifiMQTT.publish("hourly-station-count", response.c_str());
-          }
-        });
-      }
-      GPIOs::begin();
+      setTimeout([]() {
+        Configuration::MQTT::begin();
+        Counters::initialize();
+        for (auto [station, gpio]: pulseReaders) {
+          PulseCounter* counter = new PulseCounter(station, gpio);
+          pulseCounterList.push_back(counter);
+          counter->on("data", [](String response) {
+            console.log(response);
+            if (WiFi.status() == WL_CONNECTED) {
+              wifiMQTT.publish("hourly-station-count", response.c_str());
+            }
+          });
+        }
+        GPIOs::begin();
+      }, 1000);
     }
   };
 

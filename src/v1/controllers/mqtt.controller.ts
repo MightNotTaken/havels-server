@@ -37,19 +37,6 @@ class MQTTController {
             try {
                 const {mac, station} = JSON.parse(data);
                 console.log('connection', {mac, station})
-                let stationData = await StationRepository.findOne({
-                    where: {
-                        name: station
-                    }
-                });
-                console.log(stationData)
-                if (!stationData) {
-                    stationData = await StationRepository.create({
-                        name: station,
-                        mac
-                    });
-                    await StationRepository.save(stationData);
-                }
 
                 this.client?.publish(`${mac}/utc`, this.getTime() + '_' + this.getDate());
             } catch (error) {
