@@ -87,7 +87,7 @@ var StationController = /** @class */ (function () {
                                     message: 'No station found with name ' + station
                                 })];
                         }
-                        mqtt_controller_1.default.client.publish("".concat(currentStation.mac, "/reset-all"), '');
+                        mqtt_controller_1.default.client.publish("".concat(currentStation.mac, "/reset-all"), station);
                         return [4 /*yield*/, StationRepository.save(currentStation)];
                     case 2:
                         _a.sent();

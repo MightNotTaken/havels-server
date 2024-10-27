@@ -31,7 +31,7 @@ class StationController {
                     message: 'No station found with name ' + station
                 });
             }
-            mqttController.client.publish(`${currentStation.mac}/reset-all`, '');
+            mqttController.client.publish(`${currentStation.mac}/reset-all`, station);
             await StationRepository.save(currentStation);
             res.status(200).send({
                 message: 'Station count reset',
