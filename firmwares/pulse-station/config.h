@@ -1,6 +1,6 @@
-#include <utility>
 #ifndef CONFIG_H__
 #define CONFIG_H__
+#include <utility>
 #include "core/JSON.h"
 #include "core/mac.h"
 #include "core/GPIO/output.h"
@@ -69,11 +69,11 @@ namespace Configuration {
 
   namespace Device {
     std::vector<PulseCounter*> pulseCounterList;
-    std::vector<std::pair<String, int>> pulseReaders = {
-      {"station-1", PULSE_SOURCE_0},
-      {"station-2", PULSE_SOURCE_1},
-      {"station-3", PULSE_SOURCE_2},
-      {"station-4", PULSE_SOURCE_3},
+    std::vector<std::pair<String, std::vector<int>>> pulseReaders = {
+      {"station-1", {PULSE_SOURCE_0, PULSE_SOURCE_1, PULSE_SOURCE_2, PULSE_SOURCE_3}},
+      {"station-2", {PULSE_SOURCE_1}},
+      {"station-3", {PULSE_SOURCE_2}},
+      {"station-4", {PULSE_SOURCE_3}},
       // {"station-5", PULSE_SOURCE_0}
     };
     String toString() {
@@ -86,8 +86,12 @@ namespace Configuration {
       setTimeout([]() {
         Configuration::MQTT::begin();
         Counters::initialize();
-        for (auto [station, gpio]: pulseReaders) {
-          PulseCounter* counter = new PulseCounter(station, gpio);
+        for (auto [station, gpios]: pulseReaders) {
+          PulseCounter* counter = new PulseCounter(station, gpios);
+
+          counter->setIncrementFactor(25); // count increase on each pulse
+
+
           pulseCounterList.push_back(counter);
           counter->on("data", [](String response) {
             console.log(response);

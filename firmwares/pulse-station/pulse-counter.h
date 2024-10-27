@@ -16,10 +16,12 @@ class PulseCounter: public EventHandler<std::function<void(String)>> {
   int hour;
   bool synced;
   InputGPIO* pulseSource;
+  int incrementFactor;
 public:
-  PulseCounter(String station, uint8_t pulseGPIO):
+  PulseCounter(String station, std::vector<int> pulseGPIOs):
   station(station), hour(0), synced(false) {
-    console.log("Initializing pulse counter for", station, "on pin", pulseGPIO);
+    console.log("Initializing pulse counter for", station, "on pin", pulseGPIOs);
+    incrementFactor = 1;
     if (!Database::hasFile(contentFile())) {
       content = JSON("{}");
       content["actual"]="[]";
@@ -33,15 +35,21 @@ public:
     }
     Database::readFile(contentFile());
     content.resetContent(Database::payload());
-    InputGPIO* input = new InputGPIO(pulseGPIO, INPUT_PULLUP);
-    input->onStateLow([this]() {
-      this->increaseCount();
-    });
-    GPIOs::registerInput(input);
+    for (auto gpio: pulseGPIOs) {
+      InputGPIO* input = new InputGPIO(gpio, INPUT_PULLUP);
+      input->onStateLow([this]() {
+        this->increaseCount();
+      });
+      GPIOs::registerInput(input);
+    }
   }
 
   void setHour(int hour) {
     this->hour = hour;
+  }
+
+  void setIncrementFactor(int incrementFactor) {
+    this->incrementFactor = incrementFactor;
   }
 
   void sync() {
@@ -70,7 +78,7 @@ public:
 
   void increaseCount() {
     String key = synced ? "actual" : "temp";
-    content[key][hour] = content[key][hour].toInt() + 1;
+    content[key][hour] = content[key][hour].toInt() + incrementFactor;
     this->save();
     console.log(this->station, hour, content[key][hour]);
     if (synced) {
