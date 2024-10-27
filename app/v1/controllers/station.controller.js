@@ -41,7 +41,6 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 var db_1 = require("../../db");
 var Station_1 = require("../entity/Station");
-var house_keeping_utils_1 = require("../utils/house-keeping.utils");
 var mqtt_controller_1 = __importDefault(require("./mqtt.controller"));
 var StationRepository = db_1.AppDataSource.getRepository(Station_1.Station);
 var StationController = /** @class */ (function () {
@@ -69,59 +68,36 @@ var StationController = /** @class */ (function () {
         });
     };
     StationController.prototype.resetCount = function (req, res) {
-        var _a;
         return __awaiter(this, void 0, void 0, function () {
-            var _b, station, shift_1, count, date_1, currentStation, shiftCount, response, error_2;
-            return __generator(this, function (_c) {
-                switch (_c.label) {
+            var station, currentStation, error_2;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
                     case 0:
-                        _c.trys.push([0, 3, , 4]);
-                        _b = req.body, station = _b.station, shift_1 = _b.shift, count = _b.count;
-                        if (!station || !shift_1) {
-                            return [2 /*return*/, res.status(400).send({
-                                    message: 'missing parameters',
-                                    expected: ['station', 'shift', 'count (optional, default value 0)']
-                                })];
-                        }
-                        if (!count) {
-                            count = 0;
-                        }
-                        date_1 = new Date();
+                        _a.trys.push([0, 3, , 4]);
+                        station = req.body.station;
                         return [4 /*yield*/, StationRepository.findOne({
                                 where: {
                                     name: station
-                                },
-                                relations: ['shifts']
+                                }
                             })];
                     case 1:
-                        currentStation = _c.sent();
+                        currentStation = _a.sent();
                         if (!currentStation) {
                             return [2 /*return*/, res.status(400).send({
                                     message: 'No station found with name ' + station
                                 })];
                         }
-                        shiftCount = (_a = currentStation.shifts) === null || _a === void 0 ? void 0 : _a.filter(function (sft) { return (0, house_keeping_utils_1.getDateStamp)(sft.date) == (0, house_keeping_utils_1.getDateStamp)(date_1) && sft.name == shift_1; })[0];
-                        if (!shiftCount) {
-                            return [2 /*return*/, res.status(400).send({
-                                    message: 'No shift-count found with name ' + shift_1
-                                })];
-                        }
-                        shiftCount.count = count;
-                        response = {};
-                        response[shift_1] = shiftCount.count;
-                        response.station = station;
-                        response.current = shift_1;
-                        mqtt_controller_1.default.client.publish("".concat(currentStation.mac, "/reset-count"), JSON.stringify(response));
+                        mqtt_controller_1.default.client.publish("".concat(currentStation.mac, "/reset-all"), '');
                         return [4 /*yield*/, StationRepository.save(currentStation)];
                     case 2:
-                        _c.sent();
+                        _a.sent();
                         res.status(200).send({
-                            message: 'Shift ' + shift_1 + ' for station ' + station + ' count set to ' + count,
+                            message: 'Station count reset',
                             data: currentStation
                         });
                         return [3 /*break*/, 4];
                     case 3:
-                        error_2 = _c.sent();
+                        error_2 = _a.sent();
                         res.status(500).send(error_2);
                         return [3 /*break*/, 4];
                     case 4: return [2 /*return*/];
