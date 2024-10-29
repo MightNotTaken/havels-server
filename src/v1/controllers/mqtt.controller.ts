@@ -63,11 +63,16 @@ class MQTTController {
         });
         MQTTService.listen("spm:data", async (data) => {
             try {
-                const [id, qr, rating, resistance, resistanceStauts, hold, holdStauts, trip, tripStauts, hvStatus, overallStatus] = JSON.parse(data);
+                let [id, qr, rating, resistance, resistanceStatus, hold, holdStatus, trip, tripStatus, hvStatus, overallStatus] = JSON.parse(data);
+                resistanceStatus = resistanceStatus ? 'Pass' : 'Fail';
+                holdStatus = holdStatus ? 'Pass' : 'Fail';
+                tripStatus = tripStatus ? 'Pass' : 'Fail';
+                hvStatus = hvStatus ? 'Pass' : 'Fail';
+                overallStatus = overallStatus ? 'Pass' : 'Fail';
                 let spm = await SPMRepository.findOne({where: {id: +id}});
                 if (spm) {
                     let entry = await SPMEntryRepository.create({
-                        qr, rating, resistance, resistanceStauts, hold, holdStauts, trip, tripStauts, hvStatus, overallStatus, spm, date: new Date()
+                        qr, rating, resistance, resistanceStatus, hold, holdStatus, trip, tripStatus, hvStatus, overallStatus, spm, date: new Date()
                     } as any);
                     await SPMEntryRepository.save(entry);
                     console.log(entry);

@@ -125,12 +125,17 @@ var MQTTController = /** @class */ (function () {
             });
         }); });
         mqtt_util_1.default.listen("spm:data", function (data) { return __awaiter(_this, void 0, void 0, function () {
-            var _a, id, qr, rating, resistance, resistanceStauts, hold, holdStauts, trip, tripStauts, hvStatus, overallStatus, spm, entry, error_2;
+            var _a, id, qr, rating, resistance, resistanceStatus, hold, holdStatus, trip, tripStatus, hvStatus, overallStatus, spm, entry, error_2;
             return __generator(this, function (_b) {
                 switch (_b.label) {
                     case 0:
                         _b.trys.push([0, 5, , 6]);
-                        _a = JSON.parse(data), id = _a[0], qr = _a[1], rating = _a[2], resistance = _a[3], resistanceStauts = _a[4], hold = _a[5], holdStauts = _a[6], trip = _a[7], tripStauts = _a[8], hvStatus = _a[9], overallStatus = _a[10];
+                        _a = JSON.parse(data), id = _a[0], qr = _a[1], rating = _a[2], resistance = _a[3], resistanceStatus = _a[4], hold = _a[5], holdStatus = _a[6], trip = _a[7], tripStatus = _a[8], hvStatus = _a[9], overallStatus = _a[10];
+                        resistanceStatus = resistanceStatus ? 'Pass' : 'Fail';
+                        holdStatus = holdStatus ? 'Pass' : 'Fail';
+                        tripStatus = tripStatus ? 'Pass' : 'Fail';
+                        hvStatus = hvStatus ? 'Pass' : 'Fail';
+                        overallStatus = overallStatus ? 'Pass' : 'Fail';
                         return [4 /*yield*/, SPMRepository.findOne({ where: { id: +id } })];
                     case 1:
                         spm = _b.sent();
@@ -139,11 +144,11 @@ var MQTTController = /** @class */ (function () {
                                 qr: qr,
                                 rating: rating,
                                 resistance: resistance,
-                                resistanceStauts: resistanceStauts,
+                                resistanceStatus: resistanceStatus,
                                 hold: hold,
-                                holdStauts: holdStauts,
+                                holdStatus: holdStatus,
                                 trip: trip,
-                                tripStauts: tripStauts,
+                                tripStatus: tripStatus,
                                 hvStatus: hvStatus,
                                 overallStatus: overallStatus,
                                 spm: spm,

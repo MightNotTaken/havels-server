@@ -20,11 +20,11 @@ var SPMEntry = /** @class */ (function () {
         this.qr = body.qr;
         this.rating = body.rating;
         this.resistance = body.resistance;
-        this.resistanceStauts = body.resistanceStauts;
+        this.resistanceStatus = body.resistanceStatus;
         this.hold = body.hold;
-        this.holdStauts = body.holdStauts;
+        this.holdStatus = body.holdStatus;
         this.trip = body.trip;
-        this.tripStauts = body.tripStauts;
+        this.tripStatus = body.tripStatus;
         this.hvStatus = body.hvStatus;
         this.overallStatus = body.overallStatus;
         this.spm = body.spm;
@@ -54,9 +54,11 @@ var SPMEntry = /** @class */ (function () {
         __metadata("design:type", Number)
     ], SPMEntry.prototype, "resistance", void 0);
     __decorate([
-        (0, typeorm_1.Column)({}),
-        __metadata("design:type", Number)
-    ], SPMEntry.prototype, "resistanceStauts", void 0);
+        (0, typeorm_1.Column)({
+            default: 'Pass'
+        }),
+        __metadata("design:type", String)
+    ], SPMEntry.prototype, "resistanceStatus", void 0);
     __decorate([
         (0, typeorm_1.Column)({
             type: 'float'
@@ -64,9 +66,11 @@ var SPMEntry = /** @class */ (function () {
         __metadata("design:type", Number)
     ], SPMEntry.prototype, "hold", void 0);
     __decorate([
-        (0, typeorm_1.Column)({}),
-        __metadata("design:type", Number)
-    ], SPMEntry.prototype, "holdStauts", void 0);
+        (0, typeorm_1.Column)({
+            default: 'Pass'
+        }),
+        __metadata("design:type", String)
+    ], SPMEntry.prototype, "holdStatus", void 0);
     __decorate([
         (0, typeorm_1.Column)({
             type: 'float'
@@ -74,16 +78,22 @@ var SPMEntry = /** @class */ (function () {
         __metadata("design:type", Number)
     ], SPMEntry.prototype, "trip", void 0);
     __decorate([
-        (0, typeorm_1.Column)({}),
-        __metadata("design:type", Number)
-    ], SPMEntry.prototype, "tripStauts", void 0);
+        (0, typeorm_1.Column)({
+            default: 'Pass'
+        }),
+        __metadata("design:type", String)
+    ], SPMEntry.prototype, "tripStatus", void 0);
     __decorate([
-        (0, typeorm_1.Column)({}),
-        __metadata("design:type", Number)
+        (0, typeorm_1.Column)({
+            default: 'Pass'
+        }),
+        __metadata("design:type", String)
     ], SPMEntry.prototype, "hvStatus", void 0);
     __decorate([
-        (0, typeorm_1.Column)({}),
-        __metadata("design:type", Number)
+        (0, typeorm_1.Column)({
+            default: 'Pass'
+        }),
+        __metadata("design:type", String)
     ], SPMEntry.prototype, "overallStatus", void 0);
     __decorate([
         (0, typeorm_1.ManyToOne)(function () { return SPM_1.SPM; }, function (spm) { return spm.entries; }, {

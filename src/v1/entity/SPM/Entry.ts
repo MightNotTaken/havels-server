@@ -23,8 +23,9 @@ export class SPMEntry {
   resistance: number;
 
   @Column({
+    default: 'Pass'
   })
-  resistanceStauts: number;
+  resistanceStatus: 'Pass'|'Fail';
 
   @Column({
     type: 'float'
@@ -32,8 +33,9 @@ export class SPMEntry {
   hold: number;
 
   @Column({
+    default: 'Pass'
   })
-  holdStauts: number;
+  holdStatus: 'Pass'|'Fail';
 
   @Column({
     type: 'float'
@@ -41,16 +43,19 @@ export class SPMEntry {
   trip: number;
 
   @Column({
+    default: 'Pass'
   })
-  tripStauts: number;
+  tripStatus: 'Pass'|'Fail';
 
   @Column({
+    default: 'Pass'
   })
-  hvStatus: number;
+  hvStatus: 'Pass'|'Fail';
 
   @Column({
+    default: 'Pass'
   })
-  overallStatus: number;
+  overallStatus: 'Pass'|'Fail';
 
   @ManyToOne(() => SPM, (spm) => spm.entries, {
     orphanedRowAction: 'delete',
@@ -66,11 +71,11 @@ export class SPMEntry {
     this.qr = body.qr;
     this.rating = body.rating;
     this.resistance = body.resistance;
-    this.resistanceStauts = body.resistanceStauts;
+    this.resistanceStatus = body.resistanceStatus;
     this.hold = body.hold;
-    this.holdStauts = body.holdStauts;
+    this.holdStatus = body.holdStatus;
     this.trip = body.trip;
-    this.tripStauts = body.tripStauts;
+    this.tripStatus = body.tripStatus;
     this.hvStatus = body.hvStatus;
     this.overallStatus = body.overallStatus;
     this.spm = body.spm;
