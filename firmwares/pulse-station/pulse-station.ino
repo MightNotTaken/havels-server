@@ -49,8 +49,11 @@ void setupWiFi() {
     Wifi.turnOnHotspot(PRODUCT_NAME + "_" + MAC::getMac(), "12345678", false);
     webServer.begin(DEVICE_TYPE);
   });
-  Wifi.begin("[{\"apName\":\"fitfab\",\"apPass\":\"12345678\"}]");
-  // Wifi.begin("[{\"apName\":\"QRG_VSMS\",\"apPass\":\"vsms@123\"}]");
+  //Wifi.begin("[{\"apName\":\"fitfab\",\"apPass\":\"12345678\"}]");
+ 
+ 
+ 
+  Wifi.begin("[{\"apName\":\"QRG_VSMS\",\"apPass\":\"vsms@123\"}]");
 }
 
 IntervalReference connectionTracker;

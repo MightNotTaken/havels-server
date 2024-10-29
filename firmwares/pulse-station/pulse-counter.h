@@ -17,9 +17,11 @@ class PulseCounter: public EventHandler<std::function<void(String)>> {
   bool synced;
   InputGPIO* pulseSource;
   int incrementFactor;
+  TimeoutReference damper;
 public:
-  PulseCounter(String station, std::vector<int> pulseGPIOs):
+  PulseCounter(String station, std::vector<int> pulseGPIOs, uint32_t dampingDuration = SECONDS(0.3)):
   station(station), hour(0), synced(false) {
+    damper = NULL_REFERENCE;
     console.log("Initializing pulse counter for", station, "on pin", pulseGPIOs);
     incrementFactor = 1;
     if (!Database::hasFile(contentFile())) {
@@ -35,21 +37,24 @@ public:
     }
     Database::readFile(contentFile());
     content.resetContent(Database::payload());
-    for (auto gpio: pulseGPIOs) {
-      InputGPIO* input = new InputGPIO(gpio, INPUT_PULLUP);
-      input->onStateLow([this]() {
-        this->increaseCount();
+    for (auto pulseGPIO: pulseGPIOs) {
+      InputGPIO* input = new InputGPIO(pulseGPIO, INPUT_PULLUP);
+      input->onStateLow([this, dampingDuration]() {
+        clearTimeout(damper);
+        damper = setTimeout([this]() {
+          this->increaseCount();
+        }, dampingDuration);
       });
       GPIOs::registerInput(input);
     }
   }
 
-  void setHour(int hour) {
-    this->hour = hour;
+  void setIncrementFactor(int factor) {
+    this->incrementFactor = factor;
   }
 
-  void setIncrementFactor(int incrementFactor) {
-    this->incrementFactor = incrementFactor;
+  void setHour(int hour) {
+    this->hour = hour;
   }
 
   void sync() {

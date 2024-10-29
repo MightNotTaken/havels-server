@@ -39,7 +39,7 @@ void WiFiMQTT::begin(JSON creds) {
   this->port = creds["port"].toInt();
   this->username = creds["username"].toString();
   this->password = creds["password"].toString();
-  this->id =  MAC::getMac();
+  this->id = creds["id"].toString();
   this->setServer(this->server.c_str(), this->port);
   this->setCallback([this](char* event, byte* payload, unsigned int length) {
     this->callback(event, payload, length);

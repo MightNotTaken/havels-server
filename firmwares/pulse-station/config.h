@@ -1,6 +1,6 @@
+#include <utility>
 #ifndef CONFIG_H__
 #define CONFIG_H__
-#include <utility>
 #include "core/JSON.h"
 #include "core/mac.h"
 #include "core/GPIO/output.h"
@@ -43,12 +43,12 @@ namespace Configuration {
       });
     }
     void begin() {
-      creds["server"] = "192.168.100.150";
+      creds["server"] = "192.168.0.123";
       creds["port"] = 1883;
-      creds["username"] = "";
-      creds["password"] = "";
-      // creds["username"] = "vsms";
-      // creds["password"] = "VSMS@123";
+      //creds["username"] = "";
+      //creds["password"] = "";
+     creds["username"] = "vsms";
+       creds["password"] = "VSMS@123";
       
       if (Database::hasFile("/mqtt/creds.conf")) {
         Database::writeFile("/mqtt/creds.conf", creds.toString());
@@ -70,38 +70,30 @@ namespace Configuration {
   namespace Device {
     std::vector<PulseCounter*> pulseCounterList;
     std::vector<std::pair<String, std::vector<int>>> pulseReaders = {
-      {"station-1", {PULSE_SOURCE_0, PULSE_SOURCE_1, PULSE_SOURCE_2, PULSE_SOURCE_3}},
-      {"station-2", {PULSE_SOURCE_1}},
-      {"station-3", {PULSE_SOURCE_2}},
-      {"station-4", {PULSE_SOURCE_3}},
-      // {"station-5", PULSE_SOURCE_0}
+      {"station-9", {PULSE_SOURCE_0, PULSE_SOURCE_1, PULSE_SOURCE_2, PULSE_SOURCE_3, PULSE_SOURCE_4}}
     };
     String toString() {
       JSON json;
       json["mac"] = MAC::getMac();
+      json["station"] = DEVICE_TYPE;
+      json["version"] = FIRMWARE_VERSION;
       return json.toString();
     }
 
     void begin() {
-      setTimeout([]() {
-        Configuration::MQTT::begin();
-        Counters::initialize();
-        for (auto [station, gpios]: pulseReaders) {
-          PulseCounter* counter = new PulseCounter(station, gpios);
-
-          counter->setIncrementFactor(25); // count increase on each pulse
-
-
-          pulseCounterList.push_back(counter);
-          counter->on("data", [](String response) {
-            console.log(response);
-            if (WiFi.status() == WL_CONNECTED) {
-              wifiMQTT.publish("hourly-station-count", response.c_str());
-            }
-          });
-        }
-        GPIOs::begin();
-      }, 1000);
+      Configuration::MQTT::begin();
+      Counters::initialize();
+      for (auto [station, gpios]: pulseReaders) {
+        PulseCounter* counter = new PulseCounter(station, gpios, SECONDS(3));
+        counter->setIncrementFactor(25);
+        pulseCounterList.push_back(counter);s
+        counter->on("data", [](String response) {
+          if (WiFi.status() == WL_CONNECTED) {
+            wifiMQTT.publish("hourly-station-count", response.c_str());
+          }
+        });
+      }
+      GPIOs::begin();
     }
   };
 

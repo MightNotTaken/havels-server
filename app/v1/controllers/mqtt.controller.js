@@ -84,36 +84,40 @@ var MQTTController = /** @class */ (function () {
             });
         }); });
         mqtt_util_1.default.listen("spm:connect", function (data) { return __awaiter(_this, void 0, void 0, function () {
-            var _a, mac, station, spm, error_1;
-            var _b, _c;
-            return __generator(this, function (_d) {
-                switch (_d.label) {
+            var _a, mac_1, station, spm_1, error_1;
+            var _this = this;
+            var _b;
+            return __generator(this, function (_c) {
+                switch (_c.label) {
                     case 0:
-                        _d.trys.push([0, 7, , 8]);
-                        _a = JSON.parse(data), mac = _a.mac, station = _a.station;
-                        return [4 /*yield*/, SPMRepository.findOne({ where: { mac: mac } })];
+                        _c.trys.push([0, 7, , 8]);
+                        _a = JSON.parse(data), mac_1 = _a.mac, station = _a.station;
+                        return [4 /*yield*/, SPMRepository.findOne({ where: { mac: mac_1 } })];
                     case 1:
-                        spm = _d.sent();
-                        if (!!spm) return [3 /*break*/, 4];
-                        return [4 /*yield*/, SPMRepository.create({ mac: mac, name: station })];
+                        spm_1 = _c.sent();
+                        if (!!spm_1) return [3 /*break*/, 4];
+                        return [4 /*yield*/, SPMRepository.create({ mac: mac_1, name: station })];
                     case 2:
-                        spm = _d.sent();
-                        return [4 /*yield*/, SPMRepository.save(spm)];
+                        spm_1 = _c.sent();
+                        return [4 /*yield*/, SPMRepository.save(spm_1)];
                     case 3:
-                        _d.sent();
+                        _c.sent();
                         return [3 /*break*/, 6];
                     case 4:
-                        if (!(spm.name !== station)) return [3 /*break*/, 6];
-                        return [4 /*yield*/, SPMRepository.update(spm, { name: station })];
+                        if (!(spm_1.name !== station)) return [3 /*break*/, 6];
+                        return [4 /*yield*/, SPMRepository.update(spm_1, { name: station })];
                     case 5:
-                        _d.sent();
-                        _d.label = 6;
+                        _c.sent();
+                        _c.label = 6;
                     case 6:
-                        (_b = this.client) === null || _b === void 0 ? void 0 : _b.publish("".concat(mac, "/id"), "".concat(spm.id));
-                        (_c = this.client) === null || _c === void 0 ? void 0 : _c.publish("".concat(mac, "/utc"), this.getTime() + '_' + this.getDate());
+                        setTimeout(function () {
+                            var _a;
+                            (_a = _this.client) === null || _a === void 0 ? void 0 : _a.publish("".concat(mac_1, "/id"), "".concat(spm_1.id));
+                        }, 400);
+                        (_b = this.client) === null || _b === void 0 ? void 0 : _b.publish("".concat(mac_1, "/utc"), this.getTime() + '_' + this.getDate());
                         return [3 /*break*/, 8];
                     case 7:
-                        error_1 = _d.sent();
+                        error_1 = _c.sent();
                         console.error(error_1);
                         return [3 /*break*/, 8];
                     case 8: return [2 /*return*/];
@@ -229,29 +233,29 @@ var MQTTController = /** @class */ (function () {
             });
         }); });
         mqtt_util_1.default.listen("calib:connect", function (data) { return __awaiter(_this, void 0, void 0, function () {
-            var _a, mac_1, name, bench_1, error_4;
+            var _a, mac_2, name, bench_1, error_4;
             var _this = this;
             var _b;
             return __generator(this, function (_c) {
                 switch (_c.label) {
                     case 0:
                         _c.trys.push([0, 3, , 4]);
-                        _a = JSON.parse(data), mac_1 = _a.mac, name = _a.name;
-                        return [4 /*yield*/, CalBenchRepository.findOne({ where: { mac: mac_1 } })];
+                        _a = JSON.parse(data), mac_2 = _a.mac, name = _a.name;
+                        return [4 /*yield*/, CalBenchRepository.findOne({ where: { mac: mac_2 } })];
                     case 1:
                         bench_1 = _c.sent();
                         if (!bench_1) {
-                            bench_1 = calibration_bench_controller_1.CalibrationBenchController.createBench({ name: name, mac: mac_1 });
+                            bench_1 = calibration_bench_controller_1.CalibrationBenchController.createBench({ name: name, mac: mac_2 });
                         }
-                        bench_1.mac = mac_1;
+                        bench_1.mac = mac_2;
                         return [4 /*yield*/, CalBenchRepository.save(bench_1)];
                     case 2:
                         _c.sent();
                         console.log(bench_1);
-                        (_b = this.client) === null || _b === void 0 ? void 0 : _b.publish("".concat(mac_1, "/utc"), this.getTime() + '_' + this.getDate());
+                        (_b = this.client) === null || _b === void 0 ? void 0 : _b.publish("".concat(mac_2, "/utc"), this.getTime() + '_' + this.getDate());
                         setTimeout(function () {
                             var _a;
-                            (_a = _this.client) === null || _a === void 0 ? void 0 : _a.publish("".concat(mac_1, "/bench-id"), "".concat(bench_1.id));
+                            (_a = _this.client) === null || _a === void 0 ? void 0 : _a.publish("".concat(mac_2, "/bench-id"), "".concat(bench_1.id));
                         }, 500);
                         return [3 /*break*/, 4];
                     case 3:

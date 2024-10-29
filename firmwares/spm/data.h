@@ -92,6 +92,7 @@ namespace DataSource {
             }
             if (data.indexOf("OVER") > -1) {
                 data.replace(" ", "");
+                Serial.println(data);
                 dataSource.parse(data);
                 data = "";
                 dataCallback(dataSource.toString());

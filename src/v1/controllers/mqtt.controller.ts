@@ -53,8 +53,9 @@ class MQTTController {
                 } else if (spm.name !== station) {
                     await SPMRepository.update(spm, {name: station});
                 }
-                
-                this.client?.publish(`${mac}/id`, `${spm.id}`);
+                setTimeout(() => {
+                    this.client?.publish(`${mac}/id`, `${spm.id}`);
+                }, 400);
                 this.client?.publish(`${mac}/utc`, this.getTime() + '_' + this.getDate());
             } catch (error) {
                 console.error(error);

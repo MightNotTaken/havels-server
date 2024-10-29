@@ -233,8 +233,8 @@ namespace DataSource {
                     if (stationID <= 24) {
                         DataSource::benches[stationID].setResult(result);
                         DataSource::benches[stationID].setTripTime(tripTime);
-                        console.log(DataSource::benches[i]);
-                        wifiMQTT.emit("calib:data", DataSource::benches[i].toString());
+                        console.log(DataSource::benches[stationID]);
+                        wifiMQTT.emit("calib:data", DataSource::benches[stationID].toString());
                     }
                 }
             }, timeout);
