@@ -6,12 +6,12 @@ export interface SPMEntryInterface {
     date: Date;
     rating: string;
     resistance: number;
-    resistanceStauts: boolean;
+    resistanceStauts: number;
     hold: number;
-    holdStauts: boolean;
+    holdStauts: number;
     trip: number;
-    tripStauts: boolean;
-    hvStatus: boolean;
-    overallStatus: boolean;
+    tripStauts: number;
+    hvStatus: number;
+    overallStatus: number;
     spm: SPM;  
 };

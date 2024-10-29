@@ -151,7 +151,7 @@ class MQTTController {
                 console.log({mac, mode, rating, current, ambient, t1, t2, t3, t4})
                 let batch = await BatchRepository.findOne({
                     where: {
-                        mode, rating, current, ambient, t1, t2, t3, t4
+                        mode, rating, current, t1, t2, t3, t4
                     }
                 });
                 if (!batch) {

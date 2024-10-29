@@ -38,7 +38,7 @@ public:
     Database::readFile(contentFile());
     content.resetContent(Database::payload());
     for (auto pulseGPIO: pulseGPIOs) {
-      InputGPIO* input = new InputGPIO(pulseGPIO, INPUT_PULLUP);
+      InputGPIO* input = new InputGPIO(pulseGPIO, INPUT);
       input->onStateLow([this, dampingDuration]() {
         clearTimeout(damper);
         damper = setTimeout([this]() {

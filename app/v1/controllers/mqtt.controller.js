@@ -285,7 +285,6 @@ var MQTTController = /** @class */ (function () {
                                     mode: mode,
                                     rating: rating,
                                     current: current,
-                                    ambient: ambient,
                                     t1: t1,
                                     t2: t2,
                                     t3: t3,

@@ -24,7 +24,7 @@ export class SPMEntry {
 
   @Column({
   })
-  resistanceStauts: boolean;
+  resistanceStauts: number;
 
   @Column({
     type: 'float'
@@ -33,7 +33,7 @@ export class SPMEntry {
 
   @Column({
   })
-  holdStauts: boolean;
+  holdStauts: number;
 
   @Column({
     type: 'float'
@@ -42,15 +42,15 @@ export class SPMEntry {
 
   @Column({
   })
-  tripStauts: boolean;
+  tripStauts: number;
 
   @Column({
   })
-  hvStatus: boolean;
+  hvStatus: number;
 
   @Column({
   })
-  overallStatus: boolean;
+  overallStatus: number;
 
   @ManyToOne(() => SPM, (spm) => spm.entries, {
     orphanedRowAction: 'delete',
@@ -75,5 +75,6 @@ export class SPMEntry {
     this.overallStatus = body.overallStatus;
     this.spm = body.spm;
     this.date = body.date;
+    console.log('this', this)
   }
 }

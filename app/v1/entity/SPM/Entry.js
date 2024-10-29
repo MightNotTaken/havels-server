@@ -29,6 +29,7 @@ var SPMEntry = /** @class */ (function () {
         this.overallStatus = body.overallStatus;
         this.spm = body.spm;
         this.date = body.date;
+        console.log('this', this);
     }
     __decorate([
         (0, typeorm_1.PrimaryGeneratedColumn)(),
@@ -54,7 +55,7 @@ var SPMEntry = /** @class */ (function () {
     ], SPMEntry.prototype, "resistance", void 0);
     __decorate([
         (0, typeorm_1.Column)({}),
-        __metadata("design:type", Boolean)
+        __metadata("design:type", Number)
     ], SPMEntry.prototype, "resistanceStauts", void 0);
     __decorate([
         (0, typeorm_1.Column)({
@@ -64,7 +65,7 @@ var SPMEntry = /** @class */ (function () {
     ], SPMEntry.prototype, "hold", void 0);
     __decorate([
         (0, typeorm_1.Column)({}),
-        __metadata("design:type", Boolean)
+        __metadata("design:type", Number)
     ], SPMEntry.prototype, "holdStauts", void 0);
     __decorate([
         (0, typeorm_1.Column)({
@@ -74,15 +75,15 @@ var SPMEntry = /** @class */ (function () {
     ], SPMEntry.prototype, "trip", void 0);
     __decorate([
         (0, typeorm_1.Column)({}),
-        __metadata("design:type", Boolean)
+        __metadata("design:type", Number)
     ], SPMEntry.prototype, "tripStauts", void 0);
     __decorate([
         (0, typeorm_1.Column)({}),
-        __metadata("design:type", Boolean)
+        __metadata("design:type", Number)
     ], SPMEntry.prototype, "hvStatus", void 0);
     __decorate([
         (0, typeorm_1.Column)({}),
-        __metadata("design:type", Boolean)
+        __metadata("design:type", Number)
     ], SPMEntry.prototype, "overallStatus", void 0);
     __decorate([
         (0, typeorm_1.ManyToOne)(function () { return SPM_1.SPM; }, function (spm) { return spm.entries; }, {
