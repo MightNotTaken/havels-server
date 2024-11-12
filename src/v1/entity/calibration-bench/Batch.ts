@@ -1,7 +1,8 @@
 // Batch.ts
-import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from "typeorm";
+import { Column, Entity, ManyToOne, OneToMany, PrimaryGeneratedColumn } from "typeorm";
 import { BatchInterface } from "../../interfaces/calibration-bench/batch.interface";
 import { CalibrationPodEntry } from "./Entry";
+import { CalibrationBench } from "./Bench";
 
 @Entity()
 export class Batch {
@@ -39,6 +40,13 @@ export class Batch {
   @Column({ nullable: true })
   timestamp: Date;
 
+  @ManyToOne(() => CalibrationBench, (bench) => bench.pods, {
+    orphanedRowAction: 'delete',
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE',
+  })
+  bench: CalibrationBench;
+  
   constructor(body: BatchInterface) {
     if (!body) {
       return;
@@ -50,5 +58,6 @@ export class Batch {
     this.t2 = body.t2;
     this.t3 = body.t3;
     this.t4 = body.t4;
+    this.bench = body.bench;
   }
 }

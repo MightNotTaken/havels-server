@@ -271,12 +271,12 @@ var MQTTController = /** @class */ (function () {
             });
         }); });
         mqtt_util_1.default.listen("calib:batch-params", function (rawData) { return __awaiter(_this, void 0, void 0, function () {
-            var _a, mac, mode, rating, current, ambient, t1, t2, t3, t4, batch, error_5;
+            var _a, mac, mode, rating, current, ambient, t1, t2, t3, t4, bench, batch, error_5;
             var _b;
             return __generator(this, function (_c) {
                 switch (_c.label) {
                     case 0:
-                        _c.trys.push([0, 5, , 6]);
+                        _c.trys.push([0, 6, , 7]);
                         _a = JSON.parse(rawData), mac = _a[0], mode = _a[1], rating = _a[2], current = _a[3], ambient = _a[4], t1 = _a[5], t2 = _a[6], t3 = _a[7], t4 = _a[8];
                         current = +current;
                         ambient = +ambient;
@@ -285,6 +285,13 @@ var MQTTController = /** @class */ (function () {
                         t3 = +t3;
                         t4 = +t4;
                         console.log({ mac: mac, mode: mode, rating: rating, current: current, ambient: ambient, t1: t1, t2: t2, t3: t3, t4: t4 });
+                        return [4 /*yield*/, CalBenchRepository.findOne({
+                                where: {
+                                    mac: mac
+                                }
+                            })];
+                    case 1:
+                        bench = _c.sent();
                         return [4 /*yield*/, BatchRepository.findOne({
                                 where: {
                                     mode: mode,
@@ -296,9 +303,9 @@ var MQTTController = /** @class */ (function () {
                                     t4: t4
                                 }
                             })];
-                    case 1:
+                    case 2:
                         batch = _c.sent();
-                        if (!!batch) return [3 /*break*/, 4];
+                        if (!!batch) return [3 /*break*/, 5];
                         return [4 /*yield*/, BatchRepository.create({
                                 mode: mode,
                                 rating: rating,
@@ -308,21 +315,22 @@ var MQTTController = /** @class */ (function () {
                                 t2: t2,
                                 t3: t3,
                                 t4: t4,
+                                bench: bench,
                                 timestamp: new Date()
                             })];
-                    case 2:
+                    case 3:
                         batch = _c.sent();
                         return [4 /*yield*/, BatchRepository.save(batch)];
-                    case 3:
-                        _c.sent();
-                        _c.label = 4;
                     case 4:
-                        (_b = this.client) === null || _b === void 0 ? void 0 : _b.publish("".concat(mac, "/batch-id"), "".concat(batch.id));
-                        return [3 /*break*/, 6];
+                        _c.sent();
+                        _c.label = 5;
                     case 5:
+                        (_b = this.client) === null || _b === void 0 ? void 0 : _b.publish("".concat(mac, "/batch-id"), "".concat(batch.id));
+                        return [3 /*break*/, 7];
+                    case 6:
                         error_5 = _c.sent();
-                        return [3 /*break*/, 6];
-                    case 6: return [2 /*return*/];
+                        return [3 /*break*/, 7];
+                    case 7: return [2 /*return*/];
                 }
             });
         }); });

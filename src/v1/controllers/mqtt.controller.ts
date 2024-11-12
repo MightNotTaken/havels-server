@@ -154,6 +154,11 @@ class MQTTController {
                 t3 = +t3;
                 t4 = +t4;
                 console.log({mac, mode, rating, current, ambient, t1, t2, t3, t4})
+                const bench = await CalBenchRepository.findOne({
+                    where: {
+                        mac
+                    }
+                });
                 let batch = await BatchRepository.findOne({
                     where: {
                         mode, rating, current, t1, t2, t3, t4
@@ -161,8 +166,7 @@ class MQTTController {
                 });
                 if (!batch) {
                     batch = await BatchRepository.create({
-                        mode, rating, current, ambient, t1, t2, t3, t4,
-                        timestamp: new Date()
+                        mode, rating, current, ambient, t1, t2, t3, t4, bench, timestamp: new Date()
                     });
                     await BatchRepository.save(batch);
                 }

@@ -1,3 +1,5 @@
+import { CalibrationBench } from "../../entity/calibration-bench/Bench";
+
 export interface BatchInterface {
     id: number;
     mode: "cal" | "ver";
@@ -9,4 +11,5 @@ export interface BatchInterface {
     t3: number;
     t4: number;
     timestamp: Date;
+    bench: CalibrationBench
 };

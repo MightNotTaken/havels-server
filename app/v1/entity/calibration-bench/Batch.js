@@ -12,6 +12,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.Batch = void 0;
 // Batch.ts
 var typeorm_1 = require("typeorm");
+var Bench_1 = require("./Bench");
 var Batch = /** @class */ (function () {
     function Batch(body) {
         if (!body) {
@@ -24,6 +25,7 @@ var Batch = /** @class */ (function () {
         this.t2 = body.t2;
         this.t3 = body.t3;
         this.t4 = body.t4;
+        this.bench = body.bench;
     }
     __decorate([
         (0, typeorm_1.PrimaryGeneratedColumn)(),
@@ -69,6 +71,14 @@ var Batch = /** @class */ (function () {
         (0, typeorm_1.Column)({ nullable: true }),
         __metadata("design:type", Date)
     ], Batch.prototype, "timestamp", void 0);
+    __decorate([
+        (0, typeorm_1.ManyToOne)(function () { return Bench_1.CalibrationBench; }, function (bench) { return bench.pods; }, {
+            orphanedRowAction: 'delete',
+            onDelete: 'CASCADE',
+            onUpdate: 'CASCADE',
+        }),
+        __metadata("design:type", Bench_1.CalibrationBench)
+    ], Batch.prototype, "bench", void 0);
     Batch = __decorate([
         (0, typeorm_1.Entity)(),
         __metadata("design:paramtypes", [Object])

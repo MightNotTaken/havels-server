@@ -2,6 +2,7 @@
 import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from "typeorm";
 import { CalibrationPod } from "./Pod";
 import { CalibrationBenchInterface } from "../../interfaces/calibration-bench/bench.interface";
+import { Batch } from "./Batch";
 
 @Entity()
 export class CalibrationBench {
@@ -25,6 +26,12 @@ export class CalibrationBench {
     cascade: true,
   })
   pods: CalibrationPod[];
+  
+
+  @OneToMany(() => Batch, (batch) => batch.bench, {
+    cascade: true,
+  })
+  batches: Batch[];
 
   constructor(body: Partial<CalibrationBenchInterface>) {
     if (!body) {

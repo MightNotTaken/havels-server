@@ -13,6 +13,7 @@ exports.CalibrationBench = void 0;
 // Bench.ts
 var typeorm_1 = require("typeorm");
 var Pod_1 = require("./Pod");
+var Batch_1 = require("./Batch");
 var CalibrationBench = /** @class */ (function () {
     function CalibrationBench(body) {
         if (!body) {
@@ -45,6 +46,12 @@ var CalibrationBench = /** @class */ (function () {
         }),
         __metadata("design:type", Array)
     ], CalibrationBench.prototype, "pods", void 0);
+    __decorate([
+        (0, typeorm_1.OneToMany)(function () { return Batch_1.Batch; }, function (batch) { return batch.bench; }, {
+            cascade: true,
+        }),
+        __metadata("design:type", Array)
+    ], CalibrationBench.prototype, "batches", void 0);
     CalibrationBench = __decorate([
         (0, typeorm_1.Entity)(),
         __metadata("design:paramtypes", [Object])
