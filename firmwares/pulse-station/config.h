@@ -43,12 +43,12 @@ namespace Configuration {
       });
     }
     void begin() {
-      creds["server"] = "192.168.0.123";
+      creds["server"] = "192.168.184.189";
       creds["port"] = 1883;
-      //creds["username"] = "";
-      //creds["password"] = "";
-     creds["username"] = "vsms";
-       creds["password"] = "VSMS@123";
+      creds["username"] = "";
+      creds["password"] = "";
+    //  creds["username"] = "vsms";
+    //  creds["password"] = "VSMS@123";
       
       if (Database::hasFile("/mqtt/creds.conf")) {
         Database::writeFile("/mqtt/creds.conf", creds.toString());
@@ -84,9 +84,9 @@ namespace Configuration {
       Configuration::MQTT::begin();
       Counters::initialize();
       for (auto [station, gpios]: pulseReaders) {
-        PulseCounter* counter = new PulseCounter(station, gpios, SECONDS(3));
+        PulseCounter* counter = new PulseCounter(station, gpios, SECONDS(.3));
         counter->setIncrementFactor(25);
-        pulseCounterList.push_back(counter);s
+        pulseCounterList.push_back(counter);
         counter->on("data", [](String response) {
           if (WiFi.status() == WL_CONNECTED) {
             wifiMQTT.publish("hourly-station-count", response.c_str());

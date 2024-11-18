@@ -175,7 +175,7 @@ var MQTTController = /** @class */ (function () {
             return __generator(this, function (_b) {
                 switch (_b.label) {
                     case 0:
-                        _b.trys.push([0, 10, , 11]);
+                        _b.trys.push([0, 11, , 12]);
                         console.log(data);
                         _a = JSON.parse(data), hour = _a[0], stationName = _a[1], count = _a[2], mac = _a[3];
                         return [4 /*yield*/, StationRepository.findOne({
@@ -192,12 +192,15 @@ var MQTTController = /** @class */ (function () {
                             })];
                     case 2:
                         station = _b.sent();
+                        station.referenceCount = count;
+                        station.currentCount = count;
                         return [4 /*yield*/, StationRepository.save(station)];
                     case 3:
                         _b.sent();
                         _b.label = 4;
                     case 4:
                         ;
+                        station.lastUpdate = new Date();
                         date = new Date();
                         date.setHours(0);
                         date.setMinutes(0);
@@ -205,35 +208,47 @@ var MQTTController = /** @class */ (function () {
                         date.setMilliseconds(0);
                         return [4 /*yield*/, HourlyCountRepository.findOne({
                                 where: {
-                                    station: station,
+                                    station: station.id,
                                     hour: +hour,
                                     date: date
                                 }
                             })];
                     case 5:
                         hourlyCount = _b.sent();
+                        if (station.currentCount > count) {
+                            station.referenceCount = count;
+                            station.currentCount = count;
+                        }
                         if (!!hourlyCount) return [3 /*break*/, 7];
+                        console.log("creating hourly count");
                         return [4 /*yield*/, HourlyCountRepository.create({
                                 hour: +hour,
                                 date: date,
                                 station: station,
-                                count: +count
+                                count: +count - station.currentCount
                             })];
                     case 6:
                         hourlyCount = _b.sent();
+                        station.referenceCount = count;
                         return [3 /*break*/, 8];
                     case 7:
-                        hourlyCount.count = count;
+                        console.log("updating hourly count, last count is:", hourlyCount.count);
+                        hourlyCount.count = +count - station.referenceCount;
                         _b.label = 8;
-                    case 8: return [4 /*yield*/, HourlyCountRepository.save(hourlyCount)];
+                    case 8:
+                        station.currentCount = count;
+                        return [4 /*yield*/, StationRepository.save(station)];
                     case 9:
                         _b.sent();
-                        return [3 /*break*/, 11];
+                        return [4 /*yield*/, HourlyCountRepository.save(hourlyCount)];
                     case 10:
+                        _b.sent();
+                        return [3 /*break*/, 12];
+                    case 11:
                         error_3 = _b.sent();
                         console.error(error_3);
-                        return [3 /*break*/, 11];
-                    case 11: return [2 /*return*/];
+                        return [3 /*break*/, 12];
+                    case 12: return [2 /*return*/];
                 }
             });
         }); });
@@ -300,7 +315,8 @@ var MQTTController = /** @class */ (function () {
                                     t1: t1,
                                     t2: t2,
                                     t3: t3,
-                                    t4: t4
+                                    t4: t4,
+                                    bench: bench.id
                                 }
                             })];
                     case 2:

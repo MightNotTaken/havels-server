@@ -45,6 +45,25 @@ var Station = /** @class */ (function () {
         }),
         __metadata("design:type", String)
     ], Station.prototype, "mac", void 0);
+    __decorate([
+        (0, typeorm_1.Column)({
+            default: 0
+        }),
+        __metadata("design:type", Number)
+    ], Station.prototype, "referenceCount", void 0);
+    __decorate([
+        (0, typeorm_1.Column)({
+            default: 0
+        }),
+        __metadata("design:type", Number)
+    ], Station.prototype, "currentCount", void 0);
+    __decorate([
+        (0, typeorm_1.Column)({
+            type: "timestamp",
+            default: function () { return "CURRENT_TIMESTAMP"; },
+        }),
+        __metadata("design:type", Date)
+    ], Station.prototype, "lastUpdate", void 0);
     Station = __decorate([
         (0, typeorm_1.Entity)(),
         __metadata("design:paramtypes", [Object])

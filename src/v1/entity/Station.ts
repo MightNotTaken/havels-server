@@ -22,6 +22,19 @@ export class Station {
     nullable: false
   }) mac: string;
 
+  @Column({
+    default: 0
+  }) referenceCount: number;
+
+  @Column({
+    default: 0
+  }) currentCount: number;
+
+  @Column({
+    type: "timestamp",
+    default: () => "CURRENT_TIMESTAMP",
+  }) lastUpdate: Date;
+
   constructor(body: StationInterface) {
     if (!body) {
         return;

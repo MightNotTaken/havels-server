@@ -96,8 +96,11 @@ class MQTTController {
                         name: stationName,
                         mac: mac
                     });
+                    station.referenceCount = count;
+                    station.currentCount = count; 
                     await StationRepository.save(station);
                 };
+                station.lastUpdate = new Date();
                 let date = new Date();
                 date.setHours(0);
                 date.setMinutes(0);
@@ -106,21 +109,32 @@ class MQTTController {
                 
                 let hourlyCount = await HourlyCountRepository.findOne({
                     where: {
-                        station,
+                        station: station.id as any,
                         hour: +hour,
                         date: date
                     }
                 });
+                if (station.currentCount > count) {
+                    station.referenceCount = count;
+                    station.currentCount = count;
+                }
                 if (!hourlyCount) {
+                    console.log("creating hourly count");
                     hourlyCount = await HourlyCountRepository.create({
                         hour: +hour,
                         date: date,
                         station: station,
-                        count: +count
+                        count: +count - station.currentCount
                     });
+                    
+                    station.referenceCount = count;
                 } else {
-                    hourlyCount.count = count;
+                    console.log("updating hourly count, last count is:", hourlyCount.count);
+                    hourlyCount.count = +count - station.referenceCount;
                 }
+                
+                station.currentCount = count;
+                await StationRepository.save(station)
                 await HourlyCountRepository.save(hourlyCount);
             } catch (error) {
                 console.error(error);
@@ -161,7 +175,7 @@ class MQTTController {
                 });
                 let batch = await BatchRepository.findOne({
                     where: {
-                        mode, rating, current, t1, t2, t3, t4
+                        mode, rating, current, t1, t2, t3, t4, bench: bench.id as any
                     }
                 });
                 if (!batch) {

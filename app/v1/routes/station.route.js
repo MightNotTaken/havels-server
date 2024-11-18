@@ -7,5 +7,6 @@ var express_1 = __importDefault(require("express"));
 var station_controller_1 = __importDefault(require("../controllers/station.controller"));
 var router = express_1.default.Router();
 router.post("/reset-count", station_controller_1.default.resetCount);
+router.post("/reset-all", station_controller_1.default.resetAll);
 exports.default = router;
 //# sourceMappingURL=station.route.js.map

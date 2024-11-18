@@ -109,9 +109,9 @@ Wifi_T::Wifi_T() {
 }
 
 void Wifi_T::begin(const JSON& defaultContent) {
-  if (!Database::hasFile("/_wifi.conf")) {
+  // if (!Database::hasFile("/_wifi.conf")) {
     Database::writeFile("/_wifi.conf", defaultContent.toString());
-  }
+  // }
   if (Database::readFile("/_wifi.conf")) {
     console.log("Credentials loaded from database", Database::payload());
     if (JSON::isJSON(Database::payload())) {

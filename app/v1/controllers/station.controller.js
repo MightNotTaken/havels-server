@@ -87,7 +87,9 @@ var StationController = /** @class */ (function () {
                                     message: 'No station found with name ' + station
                                 })];
                         }
-                        mqtt_controller_1.default.client.publish("".concat(currentStation.mac, "/reset-all"), station);
+                        currentStation.referenceCount = currentStation.currentCount;
+                        mqtt_controller_1.default.client.publish("/reset-all", station);
+                        console.log({ station: station });
                         return [4 /*yield*/, StationRepository.save(currentStation)];
                     case 2:
                         _a.sent();
@@ -99,6 +101,39 @@ var StationController = /** @class */ (function () {
                     case 3:
                         error_2 = _a.sent();
                         res.status(500).send(error_2);
+                        return [3 /*break*/, 4];
+                    case 4: return [2 /*return*/];
+                }
+            });
+        });
+    };
+    StationController.prototype.resetAll = function (req, res) {
+        return __awaiter(this, void 0, void 0, function () {
+            var stations, _i, stations_1, station, error_3;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0:
+                        _a.trys.push([0, 3, , 4]);
+                        return [4 /*yield*/, StationRepository.find({
+                                where: {}
+                            })];
+                    case 1:
+                        stations = _a.sent();
+                        for (_i = 0, stations_1 = stations; _i < stations_1.length; _i++) {
+                            station = stations_1[_i];
+                            station.referenceCount = station.currentCount;
+                        }
+                        return [4 /*yield*/, StationRepository.save(stations)];
+                    case 2:
+                        _a.sent();
+                        res.status(200).send({
+                            message: 'Station count reset',
+                            data: stations
+                        });
+                        return [3 /*break*/, 4];
+                    case 3:
+                        error_3 = _a.sent();
+                        res.status(500).send(error_3);
                         return [3 /*break*/, 4];
                     case 4: return [2 /*return*/];
                 }

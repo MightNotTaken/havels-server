@@ -53,7 +53,7 @@ void setupWiFi() {
  
  
  
-  Wifi.begin("[{\"apName\":\"QRG_VSMS\",\"apPass\":\"vsms@123\"}]");
+  Wifi.begin("[{\"apName\":\"heleo master\",\"apPass\":\"heleo@master\"}]");
 }
 
 IntervalReference connectionTracker;
@@ -75,6 +75,7 @@ void setupMQTT() {
       console.log(systemClock.getCurrentTime());
     });
     wifiMQTT.listen("/reset-all", [](String response) {
+      console.log("reset called");
       Counters::resetAll();
     });
     connectionTracker = setImmediate([]() {

@@ -22,13 +22,14 @@ public:
 
     void reset() {
         this->count = 0;
-        Database::writeFile(this->getFileName(), 0);
+        Database::writeFile(this->getFileName(), "0");
     }
 
     int getCount() {
         if (!Database::hasFile(this->getFileName())) {
             this->reset();
         }
+        console.log(this->getFileName());
         Database::readFile(this->getFileName());
         return Database::payload().toInt();
     }
@@ -74,6 +75,8 @@ namespace Counters {
         for (int i=0; i<24; i++) {
             actualCount[i].reset();
             tempCount[i].reset();
+            console.log(actualCount[i].getCount());
+            console.log(tempCount[i].getCount());
         }
     }
 };
