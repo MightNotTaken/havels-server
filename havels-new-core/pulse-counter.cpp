@@ -62,6 +62,7 @@ void PulseCounter::synchronize(uint8_t hourDifference) {
     for (int i=0; i<24; i++) {
         referenceCount[i] += tempCount[(i + hourDifference) % 24];
     }
+    synced = true;
 }
 
 void PulseCounter::save() {
@@ -85,11 +86,16 @@ void PulseCounter::publish() {
     JSON data;
     data["mac"] = mac();
     data["station"] = name;
+    bool changes = false;
     for (int i=0; i<24; i++) {
         if (lastPublished[i] != referenceCount[i]) {
             list.push_back(String(i) + ":" + referenceCount[i]);
             lastPublished[i] = referenceCount[i];
+            changes = true;
         }
+    }
+    if (!changes) {
+        return;
     }
     data["data"] = list.toString();
     JSON ed;
@@ -106,11 +112,14 @@ namespace PulseCounterCtrl {
     }
     void synchronize(uint8_t hourDifference) {
         for (auto pc: list) {
-            pc->synchronize(hourDifference);
+            if (!pc->isSynced()) {
+                pc->synchronize(hourDifference);
+            }
         }
     }
     void beginDataLoop() {
         setInterval([]() {
+            console.log("logging data");
             for (auto pc: list) {
                 if (pc->isSynced()) {
                     pc->save();

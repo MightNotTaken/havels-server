@@ -1,4 +1,15 @@
 "use strict";
+var __assign = (this && this.__assign) || function () {
+    __assign = Object.assign || function(t) {
+        for (var s, i = 1, n = arguments.length; i < n; i++) {
+            s = arguments[i];
+            for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p))
+                t[p] = s[p];
+        }
+        return t;
+    };
+    return __assign.apply(this, arguments);
+};
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -40,66 +51,233 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 var db_1 = require("../../db");
+var HourlyStationCount_1 = require("../entity/HourlyStationCount");
 var Station_1 = require("../entity/Station");
 var ws_util_1 = __importDefault(require("../utils/ws.util"));
 var stationRepo = db_1.AppDataSource.getRepository(Station_1.Station);
+var hourCountRepo = db_1.AppDataSource.getRepository(HourlyStationCount_1.HourlyCount);
+var stationList = {};
+var hourlyCountList = {};
 var PulseStationController = /** @class */ (function () {
     function PulseStationController() {
     }
-    PulseStationController.prototype.initialize = function () {
-        var _this = this;
-        ws_util_1.default.dataPipelines['ps'].subscribe(function (rawData) { return __awaiter(_this, void 0, void 0, function () {
-            var event, data, _a, mac, stations, _i, stations_1, name, savedStation, error_1;
-            return __generator(this, function (_b) {
-                switch (_b.label) {
-                    case 0:
-                        _b.trys.push([0, 9, , 10]);
-                        event = rawData.event, data = rawData.data;
-                        _a = event;
-                        switch (_a) {
-                            case 'connect': return [3 /*break*/, 1];
-                        }
-                        return [3 /*break*/, 8];
+    PulseStationController.prototype.getDateString = function (raw) {
+        if (raw === void 0) { raw = false; }
+        var date = new Date();
+        date.setHours(0);
+        date.setMinutes(0);
+        date.setSeconds(0);
+        date.setMilliseconds(0);
+        if (raw) {
+            return date;
+        }
+        return "".concat(date.getDate(), "/").concat(date.getMonth() + 1, "/").concat(date.getFullYear());
+    };
+    PulseStationController.prototype.loadInitialData = function () {
+        return __awaiter(this, void 0, void 0, function () {
+            var stations, _i, stations_1, station;
+            var _this = this;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0: return [4 /*yield*/, stationRepo.find()];
                     case 1:
-                        mac = data.mac, stations = data.stations;
+                        stations = _a.sent();
                         _i = 0, stations_1 = stations;
-                        _b.label = 2;
+                        _a.label = 2;
                     case 2:
-                        if (!(_i < stations_1.length)) return [3 /*break*/, 8];
-                        name = stations_1[_i];
-                        return [4 /*yield*/, stationRepo.findOne({
-                                where: {
-                                    mac: mac,
-                                    name: name
-                                }
-                            })];
+                        if (!(_i < stations_1.length)) return [3 /*break*/, 5];
+                        station = stations_1[_i];
+                        stationList[station.name] = station;
+                        return [4 /*yield*/, this.loadHourlyCount(station)];
                     case 3:
-                        savedStation = _b.sent();
-                        if (!!savedStation) return [3 /*break*/, 6];
-                        return [4 /*yield*/, stationRepo.create({
-                                mac: mac,
-                                name: name
-                            })];
+                        _a.sent();
+                        _a.label = 4;
                     case 4:
-                        savedStation = _b.sent();
-                        return [4 /*yield*/, stationRepo.save(savedStation)];
-                    case 5:
-                        _b.sent();
-                        return [3 /*break*/, 7];
-                    case 6:
-                        console.log("saved station", savedStation);
-                        _b.label = 7;
-                    case 7:
                         _i++;
                         return [3 /*break*/, 2];
-                    case 8: return [3 /*break*/, 10];
-                    case 9:
-                        error_1 = _b.sent();
-                        return [3 /*break*/, 10];
-                    case 10: return [2 /*return*/];
+                    case 5:
+                        setInterval(function () { return __awaiter(_this, void 0, void 0, function () {
+                            var hourlyCountToSave, date, station, hour, data;
+                            return __generator(this, function (_a) {
+                                switch (_a.label) {
+                                    case 0:
+                                        hourlyCountToSave = [];
+                                        for (date in hourlyCountList) {
+                                            for (station in hourlyCountList[date]) {
+                                                for (hour in hourlyCountList[date][station]) {
+                                                    data = __assign({}, hourlyCountList[date][station][hour]);
+                                                    if (data.changed) {
+                                                        hourlyCountList[date][station][hour].changed = false;
+                                                        delete data.changed;
+                                                        hourlyCountToSave.push(data);
+                                                    }
+                                                }
+                                            }
+                                        }
+                                        if (!hourlyCountToSave.length) return [3 /*break*/, 2];
+                                        return [4 /*yield*/, hourCountRepo.save(hourlyCountToSave)];
+                                    case 1:
+                                        _a.sent();
+                                        _a.label = 2;
+                                    case 2: return [2 /*return*/];
+                                }
+                            });
+                        }); }, 10000);
+                        return [2 /*return*/];
                 }
             });
-        }); });
+        });
+    };
+    PulseStationController.prototype.loadHourlyCount = function (station) {
+        return __awaiter(this, void 0, void 0, function () {
+            var i, criteria, saved;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0:
+                        if (!hourlyCountList) {
+                            hourlyCountList = {};
+                        }
+                        if (!hourlyCountList[this.getDateString()]) {
+                            hourlyCountList = {};
+                            hourlyCountList[this.getDateString()] = {};
+                        }
+                        if (!hourlyCountList[this.getDateString()][station.name]) {
+                            hourlyCountList[this.getDateString()][station.name] = {};
+                        }
+                        i = 0;
+                        _a.label = 1;
+                    case 1:
+                        if (!(i < 24)) return [3 /*break*/, 7];
+                        criteria = {
+                            station: station,
+                            hour: i,
+                            date: this.getDateString(true)
+                        };
+                        if (!!hourlyCountList[this.getDateString()][station.name][i]) return [3 /*break*/, 6];
+                        return [4 /*yield*/, hourCountRepo.findOne({
+                                where: criteria
+                            })];
+                    case 2:
+                        saved = _a.sent();
+                        if (!!saved) return [3 /*break*/, 5];
+                        return [4 /*yield*/, hourCountRepo.create({
+                                hour: i,
+                                date: this.getDateString(true),
+                                station: station,
+                                count: 0
+                            })];
+                    case 3:
+                        saved = _a.sent();
+                        return [4 /*yield*/, hourCountRepo.save(saved)];
+                    case 4:
+                        _a.sent();
+                        _a.label = 5;
+                    case 5:
+                        hourlyCountList[this.getDateString()][station.name][i] = saved;
+                        _a.label = 6;
+                    case 6:
+                        i++;
+                        return [3 /*break*/, 1];
+                    case 7: return [2 /*return*/];
+                }
+            });
+        });
+    };
+    PulseStationController.prototype.initialize = function () {
+        return __awaiter(this, void 0, void 0, function () {
+            var _this = this;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0:
+                        ws_util_1.default.dataPipelines['ps'].subscribe(function (rawData) { return __awaiter(_this, void 0, void 0, function () {
+                            var event, data, _a, mac, stations, _i, stations_2, name, savedStation, _b, mac, station, data_2, _c, data_1, hourCount, _d, hour, count, hourlyCount, error_1;
+                            return __generator(this, function (_e) {
+                                switch (_e.label) {
+                                    case 0:
+                                        _e.trys.push([0, 12, , 13]);
+                                        event = rawData.event, data = rawData.data;
+                                        _a = event;
+                                        switch (_a) {
+                                            case 'connect': return [3 /*break*/, 1];
+                                            case 'data': return [3 /*break*/, 10];
+                                        }
+                                        return [3 /*break*/, 11];
+                                    case 1:
+                                        mac = data.mac, stations = data.stations;
+                                        _i = 0, stations_2 = stations;
+                                        _e.label = 2;
+                                    case 2:
+                                        if (!(_i < stations_2.length)) return [3 /*break*/, 9];
+                                        name = stations_2[_i];
+                                        return [4 /*yield*/, stationRepo.findOne({
+                                                where: {
+                                                    mac: mac,
+                                                    name: name
+                                                }
+                                            })];
+                                    case 3:
+                                        savedStation = _e.sent();
+                                        if (!!savedStation) return [3 /*break*/, 6];
+                                        return [4 /*yield*/, stationRepo.create({
+                                                mac: mac,
+                                                name: name
+                                            })];
+                                    case 4:
+                                        savedStation = _e.sent();
+                                        return [4 /*yield*/, stationRepo.save(savedStation)];
+                                    case 5:
+                                        _e.sent();
+                                        return [3 /*break*/, 7];
+                                    case 6:
+                                        console.log("saved station", savedStation);
+                                        _e.label = 7;
+                                    case 7:
+                                        stationList[savedStation.name] = savedStation;
+                                        _e.label = 8;
+                                    case 8:
+                                        _i++;
+                                        return [3 /*break*/, 2];
+                                    case 9: return [3 /*break*/, 11];
+                                    case 10:
+                                        {
+                                            _b = rawData.data, mac = _b.mac, station = _b.station, data_2 = _b.data;
+                                            for (_c = 0, data_1 = data_2; _c < data_1.length; _c++) {
+                                                hourCount = data_1[_c];
+                                                console.log(mac, station, data_2);
+                                                _d = hourCount.split(':').map(function (x) { return +x; }), hour = _d[0], count = _d[1];
+                                                hourlyCount = null;
+                                                try {
+                                                    hourlyCount = hourlyCountList[this.getDateString()][station][hour];
+                                                }
+                                                catch (error) {
+                                                }
+                                                finally {
+                                                    if (!hourlyCount) {
+                                                        this.loadHourlyCount(stationList[station]);
+                                                    }
+                                                    hourlyCount = hourlyCountList[this.getDateString()][station][hour];
+                                                }
+                                                hourlyCount.count = count;
+                                                hourlyCount.changed = true;
+                                                // await hourCountRepo.save(hourlyCount);
+                                            }
+                                        }
+                                        return [3 /*break*/, 11];
+                                    case 11: return [3 /*break*/, 13];
+                                    case 12:
+                                        error_1 = _e.sent();
+                                        return [3 /*break*/, 13];
+                                    case 13: return [2 /*return*/];
+                                }
+                            });
+                        }); });
+                        return [4 /*yield*/, this.loadInitialData()];
+                    case 1:
+                        _a.sent();
+                        return [2 /*return*/];
+                }
+            });
+        });
     };
     return PulseStationController;
 }());

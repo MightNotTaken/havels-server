@@ -15,10 +15,10 @@ namespace Configuration {
             { "station-3", 100, 1, 16},
             { "station-4", 100, 1, 18}
 #elif defined(ST5_ST6_ST7_ST8)
-            { "station-5", 800, 1, 14},
-            { "station-6", 800, 1, 15},
-            { "station-7", 800, 1, 17},
-            { "station-8", 800, 1, 19}
+            { "station-5", 400, 1, 14},
+            { "station-6", 400, 1, 15},
+            { "station-7", 400, 1, 17},
+            { "station-8", 400, 1, 19}
 #elif defined(ST9)
             { "station-9", 800, 25, 19},
             { "station-9", 800, 25, 21},

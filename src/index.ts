@@ -29,7 +29,6 @@ app.get("/route", (req: any, res: any) => {
 const server = http.createServer(app);
 
 wsUtil.init(server);
-psCtrl.initialize();
 server.listen(PORT, () => {
   // MQTTService.connect().then(() => {
   //   console.log('connected to Mqtt broker');
@@ -39,6 +38,7 @@ server.listen(PORT, () => {
   initializeDB().then(
     async () => {
       try {
+        psCtrl.initialize();
         console.log("database successfully initialized");
         calibrationBenchController.initialize();
       } catch (error) {

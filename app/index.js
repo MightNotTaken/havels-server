@@ -61,7 +61,6 @@ app.get("/route", function (req, res) {
 });
 var server = http_1.default.createServer(app);
 ws_util_1.default.init(server);
-pulse_station_hardware_controller_1.default.initialize();
 server.listen(PORT, function () {
     // MQTTService.connect().then(() => {
     //   console.log('connected to Mqtt broker');
@@ -71,6 +70,7 @@ server.listen(PORT, function () {
     (0, db_1.initializeDB)().then(function () { return __awaiter(void 0, void 0, void 0, function () {
         return __generator(this, function (_a) {
             try {
+                pulse_station_hardware_controller_1.default.initialize();
                 console.log("database successfully initialized");
                 calibration_bench_controller_1.default.initialize();
             }
