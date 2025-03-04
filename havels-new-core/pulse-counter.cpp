@@ -3,6 +3,7 @@
 #include <database.h>
 #include <mac.h>
 #include <web_socket.h>
+#include <JSON.h>
 PulseCounter::PulseCounter(PulseCounter_T input) {
     dumpTracker = nullptr;
     synced     = false;
@@ -95,7 +96,7 @@ void PulseCounter::publish() {
     ed["event"] = "data",
     ed["data"] = data;
     console.log("publishing", ed);
-    wsCtrl.write("ps", ed);    
+    wsCtrl.write("ps", ed.toString());    
 }
 
 namespace PulseCounterCtrl {
