@@ -32,10 +32,6 @@ void setup() {
     console.log(String(hour()));
   }, 1000);
   
-  pinMode(19, OUTPUT);
-  digitalWrite(19, LOW);
-  pinMode(27, OUTPUT);
-  digitalWrite(27, HIGH);
 
   setupWifi();
   setupWebSocket();
@@ -68,7 +64,7 @@ void loop() {
 
 
 void setupWifi() {
-  wifi.begin("png", "12345678");
+  wifi.begin("QRG_VSMS", "vsms@123");
   wifi.on("connected", []() {
     console.log("wifi connected");
   });
@@ -81,7 +77,7 @@ void setupWifi() {
 void setupWebSocket() {
   wifi.on("connected", []() {
     console.log("connecting websocket");
-    wsCtrl.begin("192.168.195.84", 3001);
+    wsCtrl.begin("192.168.0.123", 3001);
   });
   wsCtrl.on("connected", []() {
     console.log("websocket connected");

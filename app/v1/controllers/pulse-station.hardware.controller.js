@@ -82,24 +82,15 @@ var PulseStationController = /** @class */ (function () {
                     case 0: return [4 /*yield*/, stationRepo.find()];
                     case 1:
                         stations = _a.sent();
-                        _i = 0, stations_1 = stations;
-                        _a.label = 2;
-                    case 2:
-                        if (!(_i < stations_1.length)) return [3 /*break*/, 5];
-                        station = stations_1[_i];
-                        stationList[station.name] = station;
-                        return [4 /*yield*/, this.loadHourlyCount(station)];
-                    case 3:
-                        _a.sent();
-                        _a.label = 4;
-                    case 4:
-                        _i++;
-                        return [3 /*break*/, 2];
-                    case 5:
+                        for (_i = 0, stations_1 = stations; _i < stations_1.length; _i++) {
+                            station = stations_1[_i];
+                            stationList[station.name] = station;
+                            // await this.loadHourlyCount(station);
+                        }
                         setInterval(function () { return __awaiter(_this, void 0, void 0, function () {
-                            var hourlyCountToSave, date, station, hour, data;
-                            return __generator(this, function (_a) {
-                                switch (_a.label) {
+                            var hourlyCountToSave, date, station, hour, data, _a, _b;
+                            return __generator(this, function (_c) {
+                                switch (_c.label) {
                                     case 0:
                                         hourlyCountToSave = [];
                                         for (date in hourlyCountList) {
@@ -115,10 +106,11 @@ var PulseStationController = /** @class */ (function () {
                                             }
                                         }
                                         if (!hourlyCountToSave.length) return [3 /*break*/, 2];
+                                        _b = (_a = console).log;
                                         return [4 /*yield*/, hourCountRepo.save(hourlyCountToSave)];
                                     case 1:
-                                        _a.sent();
-                                        _a.label = 2;
+                                        _b.apply(_a, [_c.sent()]);
+                                        _c.label = 2;
                                     case 2: return [2 /*return*/];
                                 }
                             });
@@ -128,9 +120,9 @@ var PulseStationController = /** @class */ (function () {
             });
         });
     };
-    PulseStationController.prototype.loadHourlyCount = function (station) {
+    PulseStationController.prototype.loadHourlyCount = function (station, i) {
         return __awaiter(this, void 0, void 0, function () {
-            var i, criteria, saved;
+            var criteria, saved;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
@@ -144,41 +136,34 @@ var PulseStationController = /** @class */ (function () {
                         if (!hourlyCountList[this.getDateString()][station.name]) {
                             hourlyCountList[this.getDateString()][station.name] = {};
                         }
-                        i = 0;
-                        _a.label = 1;
-                    case 1:
-                        if (!(i < 24)) return [3 /*break*/, 7];
                         criteria = {
                             station: station,
                             hour: i,
                             date: this.getDateString(true)
                         };
-                        if (!!hourlyCountList[this.getDateString()][station.name][i]) return [3 /*break*/, 6];
+                        if (!!hourlyCountList[this.getDateString()][station.name][i]) return [3 /*break*/, 5];
                         return [4 /*yield*/, hourCountRepo.findOne({
                                 where: criteria
                             })];
-                    case 2:
+                    case 1:
                         saved = _a.sent();
-                        if (!!saved) return [3 /*break*/, 5];
+                        if (!!saved) return [3 /*break*/, 4];
                         return [4 /*yield*/, hourCountRepo.create({
                                 hour: i,
                                 date: this.getDateString(true),
                                 station: station,
                                 count: 0
                             })];
-                    case 3:
+                    case 2:
                         saved = _a.sent();
                         return [4 /*yield*/, hourCountRepo.save(saved)];
-                    case 4:
+                    case 3:
                         _a.sent();
-                        _a.label = 5;
-                    case 5:
+                        _a.label = 4;
+                    case 4:
                         hourlyCountList[this.getDateString()][station.name][i] = saved;
-                        _a.label = 6;
-                    case 6:
-                        i++;
-                        return [3 /*break*/, 1];
-                    case 7: return [2 /*return*/];
+                        _a.label = 5;
+                    case 5: return [2 /*return*/];
                 }
             });
         });
@@ -253,7 +238,7 @@ var PulseStationController = /** @class */ (function () {
                                                 }
                                                 finally {
                                                     if (!hourlyCount) {
-                                                        this.loadHourlyCount(stationList[station]);
+                                                        this.loadHourlyCount(stationList[station], hour);
                                                     }
                                                     hourlyCount = hourlyCountList[this.getDateString()][station][hour];
                                                 }

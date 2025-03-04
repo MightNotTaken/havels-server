@@ -28,7 +28,7 @@ class PulseStationController {
         const stations = await stationRepo.find();
         for (let station of stations) {
             stationList[station.name] = station;
-            await this.loadHourlyCount(station);
+            // await this.loadHourlyCount(station);
         }
         setInterval(async () => {
             const hourlyCountToSave = [];
@@ -45,12 +45,12 @@ class PulseStationController {
                 }
             }
             if (hourlyCountToSave.length) {
-                await hourCountRepo.save(hourlyCountToSave)
+                console.log(await hourCountRepo.save(hourlyCountToSave))
             }
         }, 10000);
     }
 
-    async loadHourlyCount(station) {
+    async loadHourlyCount(station, i) {
         
         if (!hourlyCountList) {
             hourlyCountList = {};
@@ -62,7 +62,7 @@ class PulseStationController {
         if (!hourlyCountList[this.getDateString()][station.name]) {
             hourlyCountList[this.getDateString()][station.name] = {}
         }
-        for (let i=0; i<24; i++) {
+        // for (let i=0; i<24; i++) {
             let criteria = {
                 station,
                 hour: i,
@@ -83,7 +83,7 @@ class PulseStationController {
                 }
                 hourlyCountList[this.getDateString()][station.name][i] = saved;
             }
-        }
+        // }
     }
 
     async initialize() {
@@ -124,7 +124,7 @@ class PulseStationController {
                                     
                                 } finally {
                                     if (!hourlyCount) {
-                                        this.loadHourlyCount(stationList[station]);
+                                        this.loadHourlyCount(stationList[station], hour);
                                     }
                                     hourlyCount = hourlyCountList[this.getDateString()][station][hour];
                                 }
