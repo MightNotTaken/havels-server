@@ -35,14 +35,12 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
         if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
     }
 };
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 var db_1 = require("../../db");
 var Station_1 = require("../entity/Station");
-var mqtt_controller_1 = __importDefault(require("./mqtt.controller"));
+var HourlyStationCount_1 = require("../entity/HourlyStationCount");
 var StationRepository = db_1.AppDataSource.getRepository(Station_1.Station);
+var HourlyCountRepository = db_1.AppDataSource.getRepository(HourlyStationCount_1.HourlyCount);
 var StationController = /** @class */ (function () {
     function StationController() {
     }
@@ -88,7 +86,7 @@ var StationController = /** @class */ (function () {
                                 })];
                         }
                         currentStation.referenceCount = currentStation.currentCount;
-                        mqtt_controller_1.default.client.publish("/reset-all", station);
+                        // mqttController.client.publish(`/reset-all`, station);
                         console.log({ station: station });
                         return [4 /*yield*/, StationRepository.save(currentStation)];
                     case 2:
@@ -136,6 +134,51 @@ var StationController = /** @class */ (function () {
                         res.status(500).send(error_3);
                         return [3 /*break*/, 4];
                     case 4: return [2 /*return*/];
+                }
+            });
+        });
+    };
+    StationController.prototype.getHourlyCount = function (req, res) {
+        return __awaiter(this, void 0, void 0, function () {
+            var _a, day, month, year, hour, date, response, error_4;
+            return __generator(this, function (_b) {
+                switch (_b.label) {
+                    case 0:
+                        _b.trys.push([0, 2, , 3]);
+                        _a = req.body, day = _a.day, month = _a.month, year = _a.year, hour = _a.hour;
+                        date = new Date();
+                        date.setDate(day);
+                        date.setMonth(month - 1);
+                        date.setFullYear(year);
+                        date.setHours(0);
+                        date.setMinutes(0);
+                        date.setSeconds(0);
+                        date.setMilliseconds(0);
+                        return [4 /*yield*/, HourlyCountRepository.find({
+                                where: {
+                                    date: date,
+                                    hour: +hour
+                                },
+                                relations: ['station']
+                            })];
+                    case 1:
+                        response = _b.sent();
+                        response = response.map(function (r) {
+                            r.station = r.station.name;
+                            return r;
+                        });
+                        response = response.sort(function (r1, r2) {
+                            if (r1.station < r2.station)
+                                return -1;
+                            return 1;
+                        });
+                        res.status(200).json(response);
+                        return [3 /*break*/, 3];
+                    case 2:
+                        error_4 = _b.sent();
+                        res.status(500).send(error_4);
+                        return [3 /*break*/, 3];
+                    case 3: return [2 /*return*/];
                 }
             });
         });

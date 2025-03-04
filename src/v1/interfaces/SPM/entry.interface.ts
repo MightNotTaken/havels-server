@@ -13,5 +13,5 @@ export interface SPMEntryInterface {
     tripStatus: 'Pass'|'Fail';
     hvStatus: 'Pass'|'Fail';
     overallStatus: 'Pass'|'Fail';
-    spm: SPM;  
+    spm: SPM;
 };

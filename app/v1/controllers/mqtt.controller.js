@@ -1,4 +1,15 @@
 "use strict";
+var __assign = (this && this.__assign) || function () {
+    __assign = Object.assign || function(t) {
+        for (var s, i = 1, n = arguments.length; i < n; i++) {
+            s = arguments[i];
+            for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p))
+                t[p] = s[p];
+        }
+        return t;
+    };
+    return __assign.apply(this, arguments);
+};
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -56,6 +67,21 @@ var SPMEntryRepository = db_1.AppDataSource.getRepository(Entry_1.SPMEntry);
 var CalBenchRepository = db_1.AppDataSource.getRepository(Bench_1.CalibrationBench);
 var BatchRepository = db_1.AppDataSource.getRepository(Batch_1.Batch);
 var PodEntryRepository = db_1.AppDataSource.getRepository(Entry_2.CalibrationPodEntry);
+var stations = {};
+var globalData = {
+    date: new Date(),
+    dateString: ''
+};
+function updateGlobalTimingParameters() {
+    var date = new Date();
+    date.setHours(0);
+    date.setMinutes(0);
+    date.setSeconds(0);
+    date.setMilliseconds(0);
+    globalData.date = date;
+    globalData.dateString = "".concat(date.getDate(), "/").concat(date.getMonth() + 1, "/").concat(date.getFullYear());
+    console.log(globalData);
+}
 var MQTTController = /** @class */ (function () {
     function MQTTController() {
         var _this = this;
@@ -66,6 +92,125 @@ var MQTTController = /** @class */ (function () {
             _this.registerDeviceEvents();
         });
     }
+    MQTTController.getRawData = function () {
+        var response = [];
+        for (var station in stations) {
+            var stationData = __assign({}, stations[station]);
+            var dataObject = {
+                station: stationData.displayName,
+                name: stationData.name,
+                id: stationData.id,
+                data: []
+            };
+            if (stationData.data[globalData.dateString]) {
+                for (var hour in stationData.data[globalData.dateString]) {
+                    dataObject.data.push({
+                        hour: +hour,
+                        count: stationData.data[globalData.dateString][hour].current - stationData.data[globalData.dateString][hour].reference
+                    });
+                }
+            }
+            response.push(dataObject);
+        }
+        return response;
+    };
+    MQTTController.saveData = function () {
+        return __awaiter(this, void 0, void 0, function () {
+            var rawData, _i, rawData_1, stationData, name, id, data, _a, data_1, _b, hour, count, hourlyCount, error_1;
+            return __generator(this, function (_c) {
+                switch (_c.label) {
+                    case 0:
+                        _c.trys.push([0, 11, , 12]);
+                        console.log('saving data');
+                        rawData = MQTTController.getRawData();
+                        _i = 0, rawData_1 = rawData;
+                        _c.label = 1;
+                    case 1:
+                        if (!(_i < rawData_1.length)) return [3 /*break*/, 10];
+                        stationData = rawData_1[_i];
+                        name = stationData.name, id = stationData.id, data = stationData.data;
+                        _a = 0, data_1 = data;
+                        _c.label = 2;
+                    case 2:
+                        if (!(_a < data_1.length)) return [3 /*break*/, 9];
+                        _b = data_1[_a], hour = _b.hour, count = _b.count;
+                        return [4 /*yield*/, HourlyCountRepository.findOne({
+                                where: {
+                                    station: +id,
+                                    hour: +hour,
+                                    date: globalData.date
+                                }
+                            })];
+                    case 3:
+                        hourlyCount = _c.sent();
+                        if (!!hourlyCount) return [3 /*break*/, 5];
+                        console.log("creating hourly count for ".concat(stationData.displayName, " on date ").concat(globalData.dateString, " and hour ").concat(hour));
+                        return [4 /*yield*/, HourlyCountRepository.create({
+                                hour: +hour,
+                                date: globalData.date,
+                                station: id,
+                                count: +count
+                            })];
+                    case 4:
+                        hourlyCount = _c.sent();
+                        return [3 /*break*/, 6];
+                    case 5:
+                        hourlyCount.count = count;
+                        _c.label = 6;
+                    case 6: return [4 /*yield*/, HourlyCountRepository.save(hourlyCount)];
+                    case 7:
+                        _c.sent();
+                        _c.label = 8;
+                    case 8:
+                        _a++;
+                        return [3 /*break*/, 2];
+                    case 9:
+                        _i++;
+                        return [3 /*break*/, 1];
+                    case 10: return [3 /*break*/, 12];
+                    case 11:
+                        error_1 = _c.sent();
+                        console.error("error in updating database", error_1);
+                        return [3 /*break*/, 12];
+                    case 12: return [2 /*return*/];
+                }
+            });
+        });
+    };
+    MQTTController.prototype.getStationData = function (req, res) {
+        return __awaiter(this, void 0, void 0, function () {
+            var response;
+            return __generator(this, function (_a) {
+                try {
+                    response = MQTTController.getRawData();
+                    res.status(200).json(response);
+                }
+                catch (error) {
+                    console.error(error);
+                    res.status(500).json({
+                        message: 'internal server error'
+                    });
+                }
+                return [2 /*return*/];
+            });
+        });
+    };
+    MQTTController.prototype.getStationRawData = function (req, res) {
+        return __awaiter(this, void 0, void 0, function () {
+            return __generator(this, function (_a) {
+                try {
+                    res.status(200).json(stations);
+                }
+                catch (error) {
+                    console.error(error);
+                    res.status(500).json({
+                        message: 'internal server error'
+                    });
+                }
+                return [2 /*return*/];
+            });
+        });
+    };
     MQTTController.prototype.registerDeviceEvents = function () {
         var _this = this;
         mqtt_util_1.default.listen('connect', function (data) { return __awaiter(_this, void 0, void 0, function () {
@@ -84,7 +229,7 @@ var MQTTController = /** @class */ (function () {
             });
         }); });
         mqtt_util_1.default.listen("spm:connect", function (data) { return __awaiter(_this, void 0, void 0, function () {
-            var _a, mac_1, station, spm_1, error_1;
+            var _a, mac_1, station, spm_1, error_2;
             var _this = this;
             var _b;
             return __generator(this, function (_c) {
@@ -117,15 +262,15 @@ var MQTTController = /** @class */ (function () {
                         (_b = this.client) === null || _b === void 0 ? void 0 : _b.publish("".concat(mac_1, "/utc"), this.getTime() + '_' + this.getDate());
                         return [3 /*break*/, 8];
                     case 7:
-                        error_1 = _c.sent();
-                        console.error(error_1);
+                        error_2 = _c.sent();
+                        console.error(error_2);
                         return [3 /*break*/, 8];
                     case 8: return [2 /*return*/];
                 }
             });
         }); });
         mqtt_util_1.default.listen("spm:data", function (data) { return __awaiter(_this, void 0, void 0, function () {
-            var _a, id, qr, rating, resistance, resistanceStatus, hold, holdStatus, trip, tripStatus, hvStatus, overallStatus, spm, entry, error_2;
+            var _a, id, qr, rating, resistance, resistanceStatus, hold, holdStatus, trip, tripStatus, hvStatus, overallStatus, spm, entry, error_3;
             return __generator(this, function (_b) {
                 switch (_b.label) {
                     case 0:
@@ -163,97 +308,77 @@ var MQTTController = /** @class */ (function () {
                         _b.label = 4;
                     case 4: return [3 /*break*/, 6];
                     case 5:
-                        error_2 = _b.sent();
-                        console.error(error_2);
+                        error_3 = _b.sent();
+                        console.error(error_3);
                         return [3 /*break*/, 6];
                     case 6: return [2 /*return*/];
                 }
             });
         }); });
         mqtt_util_1.default.listen("hourly-station-count", function (data) { return __awaiter(_this, void 0, void 0, function () {
-            var _a, hour, stationName, count, mac, station, date, hourlyCount, error_3;
-            return __generator(this, function (_b) {
-                switch (_b.label) {
+            var _a, hour, stationName, count, mac, station, error_4;
+            var _b;
+            return __generator(this, function (_c) {
+                switch (_c.label) {
                     case 0:
-                        _b.trys.push([0, 11, , 12]);
+                        _c.trys.push([0, 6, , 7]);
                         console.log(data);
                         _a = JSON.parse(data), hour = _a[0], stationName = _a[1], count = _a[2], mac = _a[3];
+                        if (!!stations[stationName]) return [3 /*break*/, 5];
                         return [4 /*yield*/, StationRepository.findOne({
                                 where: {
                                     name: stationName
                                 }
                             })];
                     case 1:
-                        station = _b.sent();
+                        station = _c.sent();
                         if (!!station) return [3 /*break*/, 4];
                         return [4 /*yield*/, StationRepository.create({
                                 name: stationName,
                                 mac: mac
                             })];
                     case 2:
-                        station = _b.sent();
-                        station.referenceCount = count;
-                        station.currentCount = count;
+                        station = _c.sent();
                         return [4 /*yield*/, StationRepository.save(station)];
                     case 3:
-                        _b.sent();
-                        _b.label = 4;
+                        _c.sent();
+                        _c.label = 4;
                     case 4:
                         ;
                         station.lastUpdate = new Date();
-                        date = new Date();
-                        date.setHours(0);
-                        date.setMinutes(0);
-                        date.setSeconds(0);
-                        date.setMilliseconds(0);
-                        return [4 /*yield*/, HourlyCountRepository.findOne({
-                                where: {
-                                    station: station.id,
-                                    hour: +hour,
-                                    date: date
-                                }
-                            })];
+                        stations[stationName] = __assign({}, station);
+                        stations[stationName].data = {};
+                        _c.label = 5;
                     case 5:
-                        hourlyCount = _b.sent();
-                        if (station.currentCount > count) {
-                            station.referenceCount = count;
-                            station.currentCount = count;
+                        if (!stations[stationName].data[globalData.dateString]) {
+                            stations[stationName].data[globalData.dateString] = {};
                         }
-                        if (!!hourlyCount) return [3 /*break*/, 7];
-                        console.log("creating hourly count");
-                        return [4 /*yield*/, HourlyCountRepository.create({
-                                hour: +hour,
-                                date: date,
-                                station: station,
-                                count: +count - station.currentCount
-                            })];
+                        if (!stations[stationName].data[globalData.dateString][hour]) {
+                            stations[stationName].data[globalData.dateString][hour] = {
+                                reference: count,
+                                current: count
+                            };
+                        }
+                        else {
+                            stations[stationName].data[globalData.dateString][hour].current = count;
+                        }
+                        stations[stationName].lastUpdate = new Date();
+                        if (+hour != (new Date()).getHours()) {
+                            console.log(hour, (new Date()).getHours());
+                            console.log('updating time');
+                            (_b = this.client) === null || _b === void 0 ? void 0 : _b.publish("".concat(mac, "/utc"), this.getTime() + '_' + this.getDate());
+                        }
+                        return [3 /*break*/, 7];
                     case 6:
-                        hourlyCount = _b.sent();
-                        station.referenceCount = count;
-                        return [3 /*break*/, 8];
-                    case 7:
-                        console.log("updating hourly count, last count is:", hourlyCount.count);
-                        hourlyCount.count = +count - station.referenceCount;
-                        _b.label = 8;
-                    case 8:
-                        station.currentCount = count;
-                        return [4 /*yield*/, StationRepository.save(station)];
-                    case 9:
-                        _b.sent();
-                        return [4 /*yield*/, HourlyCountRepository.save(hourlyCount)];
-                    case 10:
-                        _b.sent();
-                        return [3 /*break*/, 12];
-                    case 11:
-                        error_3 = _b.sent();
-                        console.error(error_3);
-                        return [3 /*break*/, 12];
-                    case 12: return [2 /*return*/];
+                        error_4 = _c.sent();
+                        console.error(error_4);
+                        return [3 /*break*/, 7];
+                    case 7: return [2 /*return*/];
                 }
             });
         }); });
         mqtt_util_1.default.listen("calib:connect", function (data) { return __awaiter(_this, void 0, void 0, function () {
-            var _a, mac_2, name, bench_1, error_4;
+            var _a, mac_2, name, bench_1, error_5;
             var _this = this;
             var _b;
             return __generator(this, function (_c) {
@@ -279,14 +404,14 @@ var MQTTController = /** @class */ (function () {
                         }, 500);
                         return [3 /*break*/, 4];
                     case 3:
-                        error_4 = _c.sent();
+                        error_5 = _c.sent();
                         return [3 /*break*/, 4];
                     case 4: return [2 /*return*/];
                 }
             });
         }); });
         mqtt_util_1.default.listen("calib:batch-params", function (rawData) { return __awaiter(_this, void 0, void 0, function () {
-            var _a, mac, mode, rating, current, ambient, t1, t2, t3, t4, bench, batch, error_5;
+            var _a, mac, mode, rating, current, ambient, t1, t2, t3, t4, bench, batch, error_6;
             var _b;
             return __generator(this, function (_c) {
                 switch (_c.label) {
@@ -344,14 +469,14 @@ var MQTTController = /** @class */ (function () {
                         (_b = this.client) === null || _b === void 0 ? void 0 : _b.publish("".concat(mac, "/batch-id"), "".concat(batch.id));
                         return [3 /*break*/, 7];
                     case 6:
-                        error_5 = _c.sent();
+                        error_6 = _c.sent();
                         return [3 /*break*/, 7];
                     case 7: return [2 /*return*/];
                 }
             });
         }); });
         mqtt_util_1.default.listen("calib:data", function (rawData) { return __awaiter(_this, void 0, void 0, function () {
-            var _a, barcode, batchID, benchID, triptTime, stationID, result, batch, bench, entry, error_6;
+            var _a, barcode, batchID, benchID, triptTime, stationID, result, batch, bench, entry, error_7;
             return __generator(this, function (_b) {
                 switch (_b.label) {
                     case 0:
@@ -383,7 +508,7 @@ var MQTTController = /** @class */ (function () {
                         _b.label = 5;
                     case 5: return [3 /*break*/, 7];
                     case 6:
-                        error_6 = _b.sent();
+                        error_7 = _b.sent();
                         return [3 /*break*/, 7];
                     case 7: return [2 /*return*/];
                 }
@@ -432,6 +557,11 @@ var MQTTController = /** @class */ (function () {
         });
     };
     MQTTController.prototype.initialize = function () {
+        updateGlobalTimingParameters();
+        setInterval(function () {
+            updateGlobalTimingParameters();
+            MQTTController.saveData();
+        }, 10000);
     };
     return MQTTController;
 }());

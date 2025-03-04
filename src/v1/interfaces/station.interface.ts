@@ -5,4 +5,5 @@ export interface StationInterface {
     referenceCount: number;
     currentCount: number;
     lastUpdate: Date;
+    displayName: string;
 }

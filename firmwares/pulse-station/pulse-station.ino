@@ -22,17 +22,33 @@ void setup() {
   Database::begin();
   
   Configuration::begin();
-  setupWiFi();
+  // setupWiFi();
   setupMQTT();
   initializeOTAEvents();
   setupServerRoutes();
 }
-
+bool wifiConnected = true;
 void loop() {
   Core::loop();
+  if (WiFi.status() == WL_CONNECTED && !wifiConnected) {
+    wifiConnected = true;
+    Serial.println("Connected to wifi");
+    
+    console.log("Wifi connected");
+    Serial.println(WiFi.localIP());
+    wifiMQTT.connect();
+    Wifi.turnOnHotspot(PRODUCT_NAME + "_" + MAC::getMac(), "12345678", false);
+    webServer.begin(DEVICE_TYPE);
+  }
+  if (WiFi.status() != WL_CONNECTED && wifiConnected) {
+    wifiConnected = false;
+    WiFi.begin("", "");
+    Serial.println("Disconnected from wifi");
+  }
 }
 
 void setupWiFi() {
+  
   Wifi.on("connect", []() {
     console.log("Wifi connecting");
   });
@@ -53,7 +69,7 @@ void setupWiFi() {
  
  
  
-  Wifi.begin("[{\"apName\":\"heleo master\",\"apPass\":\"heleo@master\"}]");
+  // Wifi.begin("[{\"apName\":\"heleo master\",\"apPass\":\"heleo@master\"}]");
 }
 
 IntervalReference connectionTracker;

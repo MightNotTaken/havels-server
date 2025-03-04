@@ -33,11 +33,18 @@ var Station = /** @class */ (function () {
     ], Station.prototype, "hourlyCounts", void 0);
     __decorate([
         (0, typeorm_1.Column)({
-            length: 30,
+            length: 50,
             nullable: false
         }),
         __metadata("design:type", String)
     ], Station.prototype, "name", void 0);
+    __decorate([
+        (0, typeorm_1.Column)({
+            length: 50,
+            default: ''
+        }),
+        __metadata("design:type", String)
+    ], Station.prototype, "displayName", void 0);
     __decorate([
         (0, typeorm_1.Column)({
             length: 30,

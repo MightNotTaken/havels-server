@@ -1,7 +1,7 @@
 import { Console, profileEnd } from "console";
 import { AppDataSource } from "../../db";
 import MQTTService from "../utils/mqtt.util";
-
+import { Request, Response } from "express";
 import { MqttClient } from "mqtt/*";
 import { Station } from "../entity/Station";
 import { SPM } from "../entity/SPM/SPM";
@@ -21,6 +21,22 @@ const CalBenchRepository = AppDataSource.getRepository(CalibrationBench);
 const BatchRepository = AppDataSource.getRepository(Batch);
 const PodEntryRepository = AppDataSource.getRepository(CalibrationPodEntry);
 
+let stations: any = {};
+let globalData = {
+    date: new Date(),
+    dateString: ''
+}
+
+function updateGlobalTimingParameters() {    
+    let date = new Date();
+    date.setHours(0);
+    date.setMinutes(0);
+    date.setSeconds(0);
+    date.setMilliseconds(0);
+    globalData.date = date;
+    globalData.dateString = `${date.getDate()}/${date.getMonth() + 1}/${date.getFullYear()}`;
+    console.log(globalData);
+}
 
 class MQTTController {
     client: MqttClient = null;
@@ -30,6 +46,87 @@ class MQTTController {
             this.client = client;
             this.registerDeviceEvents();
         });
+    }
+
+    public static getRawData() {
+        let response = [];
+        for (let station in stations) {
+            const stationData = {...stations[station]};
+            let dataObject: any = {
+                station: stationData.displayName,
+                name: stationData.name,
+                id: stationData.id,
+                data: []
+            };
+            
+            if (stationData.data[globalData.dateString]) {
+                for (let hour in stationData.data[globalData.dateString]) {
+                    dataObject.data.push({
+                        hour: +hour,
+                        count: stationData.data[globalData.dateString][hour].current - stationData.data[globalData.dateString][hour].reference
+                    });
+                }
+            }
+            response.push(dataObject);
+        }
+        return response;
+    }
+
+    public static async saveData() {
+        try {
+            console.log('saving data');
+            const rawData = MQTTController.getRawData();
+            for (let stationData of rawData) {
+                const {name, id, data} = stationData;
+                for (let {hour, count} of data) {
+                    let hourlyCount = await HourlyCountRepository.findOne({
+                        where: {
+                            station: +id as any,
+                            hour: +hour,
+                            date: globalData.date
+                        }
+                    });
+                    if (!hourlyCount) {
+                        console.log(`creating hourly count for ${stationData.displayName} on date ${globalData.dateString} and hour ${hour}`);
+                        hourlyCount = await HourlyCountRepository.create({
+                            hour: +hour,
+                            date: globalData.date,
+                            station: id,
+                            count: +count
+                        });
+                    } else {
+                        hourlyCount.count = count;
+                    }
+                    await HourlyCountRepository.save(hourlyCount);
+                }
+            }
+        } catch (error) {
+            console.error("error in updating database", error);
+        }
+    }
+
+    public async getStationData(req: Request, res: Response) {
+        try {
+            let response = MQTTController.getRawData();
+            res.status(200).json(response);
+        } catch (error) {
+            console.error(error)
+            res.status(500).json({
+                message: 'internal server error'
+            });
+        }
+    }
+    
+
+    public async getStationRawData(req: Request, res: Response) {
+        try {
+            res.status(200).json(stations);
+        } catch (error) {
+            console.error(error)
+            res.status(500).json({
+                message: 'internal server error'
+            });
+        }
     }
 
     registerDeviceEvents() {
@@ -85,61 +182,45 @@ class MQTTController {
             try {
                 console.log(data);
                 const [hour, stationName, count, mac] = JSON.parse(data);
-                
-                let station = await StationRepository.findOne({
-                    where: {
-                        name: stationName
-                    }
-                });
-                if (!station) {
-                    station = await StationRepository.create({
-                        name: stationName,
-                        mac: mac
+                if (!stations[stationName]) {
+                    let station = await StationRepository.findOne({
+                        where: {
+                            name: stationName
+                        }
                     });
-                    station.referenceCount = count;
-                    station.currentCount = count; 
-                    await StationRepository.save(station);
-                };
-                station.lastUpdate = new Date();
-                let date = new Date();
-                date.setHours(0);
-                date.setMinutes(0);
-                date.setSeconds(0);
-                date.setMilliseconds(0);
-                
-                let hourlyCount = await HourlyCountRepository.findOne({
-                    where: {
-                        station: station.id as any,
-                        hour: +hour,
-                        date: date
-                    }
-                });
-                if (station.currentCount > count) {
-                    station.referenceCount = count;
-                    station.currentCount = count;
+                    if (!station) {
+                        station = await StationRepository.create({
+                            name: stationName,
+                            mac: mac
+                        });
+                        await StationRepository.save(station);
+                    };
+                    station.lastUpdate = new Date();
+                    stations[stationName] = {...station};
+                    stations[stationName].data = {};
                 }
-                if (!hourlyCount) {
-                    console.log("creating hourly count");
-                    hourlyCount = await HourlyCountRepository.create({
-                        hour: +hour,
-                        date: date,
-                        station: station,
-                        count: +count - station.currentCount
-                    });
-                    
-                    station.referenceCount = count;
+                if (!stations[stationName].data[globalData.dateString]) {
+                    stations[stationName].data[globalData.dateString] = {};
+                }
+                if (!stations[stationName].data[globalData.dateString][hour]) {
+                    stations[stationName].data[globalData.dateString][hour] = {
+                        reference: count,
+                        current: count
+                    };
                 } else {
-                    console.log("updating hourly count, last count is:", hourlyCount.count);
-                    hourlyCount.count = +count - station.referenceCount;
+                    stations[stationName].data[globalData.dateString][hour].current = count;
                 }
-                
-                station.currentCount = count;
-                await StationRepository.save(station)
-                await HourlyCountRepository.save(hourlyCount);
+                stations[stationName].lastUpdate = new Date();
+                if (+hour != (new Date()).getHours()) {
+                    console.log(hour, (new Date()).getHours())
+                    console.log('updating time');
+                    this.client?.publish(`${mac}/utc`, this.getTime() + '_' + this.getDate());
+                }
             } catch (error) {
                 console.error(error);
             }
         });
+
         MQTTService.listen("calib:connect", async (data) => {
             try {
                 const {mac, name} = JSON.parse(data);
@@ -249,7 +330,11 @@ class MQTTController {
     }
 
     initialize() {
-
+        updateGlobalTimingParameters();
+        setInterval(() => {
+            updateGlobalTimingParameters();
+            MQTTController.saveData();
+        }, 10000);
     }
 };
 

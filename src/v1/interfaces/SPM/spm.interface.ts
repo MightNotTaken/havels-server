@@ -5,4 +5,5 @@ export interface SPMInterface {
     mac: string;
     name: string;
     entries: SPMEntry[]
+    displayName: string;
 }

@@ -8,8 +8,14 @@ export class SPM {
   id: number;
   
   @Column({
-    length: 10
+    length: 50
   }) name: string;
+
+  @Column({
+    length: 50,
+    default: ''
+  })
+  displayName: string;
   
   @Column({
     nullable: true

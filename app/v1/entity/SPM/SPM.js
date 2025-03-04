@@ -26,10 +26,17 @@ var SPM = /** @class */ (function () {
     ], SPM.prototype, "id", void 0);
     __decorate([
         (0, typeorm_1.Column)({
-            length: 10
+            length: 50
         }),
         __metadata("design:type", String)
     ], SPM.prototype, "name", void 0);
+    __decorate([
+        (0, typeorm_1.Column)({
+            length: 50,
+            default: ''
+        }),
+        __metadata("design:type", String)
+    ], SPM.prototype, "displayName", void 0);
     __decorate([
         (0, typeorm_1.Column)({
             nullable: true

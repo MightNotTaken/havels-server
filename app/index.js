@@ -43,10 +43,12 @@ var dotenv_1 = __importDefault(require("dotenv"));
 dotenv_1.default.config();
 var express_1 = __importDefault(require("express"));
 var cors_1 = __importDefault(require("cors"));
+var http_1 = __importDefault(require("http"));
 var v1_1 = __importDefault(require("./v1"));
 var db_1 = require("./db");
-var mqtt_util_1 = __importDefault(require("./v1/utils/mqtt.util"));
 var calibration_bench_controller_1 = __importDefault(require("./v1/controllers/calibration-bench.controller"));
+var ws_util_1 = __importDefault(require("./v1/utils/ws.util"));
+var pulse_station_hardware_controller_1 = __importDefault(require("./v1/controllers/pulse-station.hardware.controller"));
 var PORT = +process.env.PORT || 3000;
 var app = (0, express_1.default)();
 app.use(express_1.default.json());
@@ -57,12 +59,15 @@ app.get("/route", function (req, res) {
         message: 'its working'
     });
 });
-app.listen(PORT, function () {
-    mqtt_util_1.default.connect().then(function () {
-        console.log('connected to Mqtt broker');
-    }, function (error) {
-        console.error('Error in connecting to mqtt', error);
-    });
+var server = http_1.default.createServer(app);
+ws_util_1.default.init(server);
+pulse_station_hardware_controller_1.default.initialize();
+server.listen(PORT, function () {
+    // MQTTService.connect().then(() => {
+    //   console.log('connected to Mqtt broker');
+    // }, (error) => {
+    //   console.error('Error in connecting to mqtt', error);
+    // })
     (0, db_1.initializeDB)().then(function () { return __awaiter(void 0, void 0, void 0, function () {
         return __generator(this, function (_a) {
             try {
@@ -75,9 +80,7 @@ app.listen(PORT, function () {
             return [2 /*return*/];
         });
     }); }, function (error) {
-        setTimeout(function () {
-            console.log(error);
-        }, 5000);
+        console.log(error);
     });
     console.log("Server listening on port ".concat(PORT));
 });

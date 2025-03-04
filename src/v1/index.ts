@@ -2,7 +2,7 @@ import express from "express";
 import routes from "./routes";
 import mqttController from "./controllers/mqtt.controller";
 
-mqttController.initialize();
+// mqttController.initialize();
 const router = express.Router();
 router.use("/v1", routes);
 

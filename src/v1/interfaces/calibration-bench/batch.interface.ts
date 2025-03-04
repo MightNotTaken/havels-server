@@ -11,5 +11,6 @@ export interface BatchInterface {
     t3: number;
     t4: number;
     timestamp: Date;
-    bench: CalibrationBench
+    bench: CalibrationBench;
+    displayName: string;
 };

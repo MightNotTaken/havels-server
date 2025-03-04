@@ -13,9 +13,15 @@ export class Station {
   hourlyCounts: HourlyCount[];
 
   @Column({
-    length: 30,
+    length: 50,
     nullable: false
   }) name: string;
+
+  @Column({
+    length: 50,
+    default: ''
+  })
+  displayName: string;
 
   @Column({
     length: 30,

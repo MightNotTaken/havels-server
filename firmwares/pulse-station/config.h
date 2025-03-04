@@ -43,12 +43,12 @@ namespace Configuration {
       });
     }
     void begin() {
-      creds["server"] = "192.168.184.189";
+      creds["server"] = "192.168.0.123";
       creds["port"] = 1883;
-      creds["username"] = "";
-      creds["password"] = "";
-    //  creds["username"] = "vsms";
-    //  creds["password"] = "VSMS@123";
+      // creds["username"] = "";
+      // creds["password"] = "";
+     creds["username"] = "vsms";
+     creds["password"] = "VSMS@123";
       
       if (Database::hasFile("/mqtt/creds.conf")) {
         Database::writeFile("/mqtt/creds.conf", creds.toString());
@@ -70,7 +70,10 @@ namespace Configuration {
   namespace Device {
     std::vector<PulseCounter*> pulseCounterList;
     std::vector<std::pair<String, std::vector<int>>> pulseReaders = {
-      {"station-9", {PULSE_SOURCE_0, PULSE_SOURCE_1, PULSE_SOURCE_2, PULSE_SOURCE_3, PULSE_SOURCE_4}}
+      {"station-5", {PULSE_SOURCE_0}},
+      {"station-6", {PULSE_SOURCE_1}},
+      {"station-7", {PULSE_SOURCE_2}},
+      {"station-8", {PULSE_SOURCE_3}}
     };
     String toString() {
       JSON json;
@@ -84,8 +87,13 @@ namespace Configuration {
       Configuration::MQTT::begin();
       Counters::initialize();
       for (auto [station, gpios]: pulseReaders) {
-        PulseCounter* counter = new PulseCounter(station, gpios, SECONDS(.3));
-        counter->setIncrementFactor(25);
+        PulseCounter* counter = new PulseCounter(station, gpios, ([station]() {
+          if (station == "station-8") {
+            return SECONDS(0.01);
+          }
+          return SECONDS(0.3);
+        })());
+        counter->setIncrementFactor(1);
         pulseCounterList.push_back(counter);
         counter->on("data", [](String response) {
           if (WiFi.status() == WL_CONNECTED) {

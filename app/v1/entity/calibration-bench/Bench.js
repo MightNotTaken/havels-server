@@ -28,11 +28,18 @@ var CalibrationBench = /** @class */ (function () {
     ], CalibrationBench.prototype, "id", void 0);
     __decorate([
         (0, typeorm_1.Column)({
-            length: 30,
+            length: 50,
             nullable: false
         }),
         __metadata("design:type", String)
     ], CalibrationBench.prototype, "name", void 0);
+    __decorate([
+        (0, typeorm_1.Column)({
+            length: 50,
+            default: ''
+        }),
+        __metadata("design:type", String)
+    ], CalibrationBench.prototype, "displayName", void 0);
     __decorate([
         (0, typeorm_1.Column)({
             length: 30,

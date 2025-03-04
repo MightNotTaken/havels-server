@@ -278,6 +278,7 @@ void Wifi_T::scan() {
 }
 
 void Wifi_T::loop() {
+  return;
   paused = false;
   setInterval([this]() {
     if (this->paused) {
